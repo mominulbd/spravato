@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - app
+        - packages
+        - database/seeders
+    excludePaths:
+        - packages/*/migrations/*
+        - packages/*/tests/*
+        # Package config files are real config files (merged via mergeConfigFrom,
+        # which is skipped when the config is cached), so env() is safe there.
+        - packages/*/config/*

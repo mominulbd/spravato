@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Database\Seeders\Content;
+
+use Illuminate\Database\Seeder;
+use Uptms\Pages\Models\Page;
+use Uptms\Seo\Models\SeoMeta;
+use Uptms\Seo\Services\SeoSources;
+use Uptms\Seo\Services\SeoWorkspace;
+
+/**
+ * Search titles, descriptions and keyphrases for the four designed pages
+ * and the privacy policy. The home page copy is Figma 08's; the others
+ * follow the same pattern.
+ * Fills only pages without SEO yet, then scores them.
+ */
+class SeoContentSeeder extends Seeder
+{
+    public function __construct(private readonly SeoWorkspace $workspace, private readonly SeoSources $sources) {}
+
+    public function run(): void
+    {
+        foreach ($this->entries() as $path => $values) {
+            $page = Page::query()->where('path', $path)->first();
+
+            if (! $page instanceof Page || SeoMeta::query()->where('seoable_type', 'page')->where('seoable_id', $page->id)->exists()) {
+                continue;
+            }
+
+            $meta = SeoMeta::blank('page', $page->id);
+            $meta->fill($values)->save();
+
+            $subject = $this->sources->get('page')?->subject($page->id, live: true);
+            if ($subject !== null) {
+                $this->workspace->rescore($subject);
+            }
+        }
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    private function entries(): array
+    {
+        $nimh = ['label' => 'National Institute of Mental Health — Depression', 'url' => 'https://www.nimh.nih.gov/health/topics/depression'];
+        $fda = ['label' => 'FDA — BrainsWay Deep TMS for OCD (510(k))', 'url' => 'https://www.accessdata.fda.gov/cdrh_docs/pdf17/DEN170078.pdf'];
+
+        return [
+            '/' => [
+                'meta_title' => 'Deep TMS Therapy in University Place, WA %sep% %site%',
+                'meta_description' => 'When depression won’t lift, explore Deep TMS with a psychiatric provider near Tacoma. Ask about insurance — your first phone consultation is free.',
+                'focus_keyphrase' => 'deep tms therapy',
+                'keyphrases' => ['tms therapy tacoma', 'treatment-resistant depression', 'brainsway deep tms'],
+                'breadcrumb_title' => 'Home',
+                'citations' => [$nimh, $fda],
+            ],
+            '/tms' => [
+                'meta_title' => 'Deep TMS for Depression & OCD %sep% %site%',
+                'meta_description' => 'How Deep TMS works, who it may help, what a course of treatment involves and how insurance usually covers it — from a psychiatric team in University Place, WA.',
+                'focus_keyphrase' => 'deep tms',
+                'keyphrases' => ['brainsway h7 coil', 'tms for ocd'],
+                'citations' => [$nimh, $fda],
+            ],
+            '/contact' => [
+                'meta_title' => 'Contact University Place TMS Clinic %sep% Free Phone Consultation',
+                'meta_description' => 'Call or request a free phone consultation with University Place TMS Clinic. Office hours Mon–Fri, 8 AM–5 PM, at 4007 Bridgeport Way W, Suite B.',
+                'focus_keyphrase' => 'tms clinic university place',
+            ],
+            '/privacy' => [
+                'meta_title' => 'Privacy Policy %sep% %site%',
+                'meta_description' => 'What the University Place TMS Clinic website collects when you request a consultation or take the self-check, how it is protected and kept, and the choices you have.',
+                'focus_keyphrase' => 'privacy policy',
+                'breadcrumb_title' => 'Privacy',
+            ],
+        ];
+    }
+}

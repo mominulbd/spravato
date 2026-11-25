@@ -1,0 +1,31 @@
+@import "tailwindcss";
+/* One copy of the Figma tokens, shared with the admin (resources/css). */
+@import "../../resources/css/tokens.css";
+
+@theme inline {
+  --font-serif: var(--font-source-serif), Georgia, serif;
+  --font-display: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-nunito-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    @apply bg-white font-sans text-ink antialiased;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-royal);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
