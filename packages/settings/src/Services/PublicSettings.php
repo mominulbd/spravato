@@ -70,7 +70,6 @@ final readonly class PublicSettings
                 'crisis_short' => $disclaimers['crisis_short'],
                 'insurance' => $disclaimers['insurance'],
                 'testimonials' => $disclaimers['testimonials'],
-                'quiz' => $disclaimers['quiz'],
             ],
         ];
     }

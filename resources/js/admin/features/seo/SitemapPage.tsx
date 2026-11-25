@@ -9,7 +9,7 @@ import { PageHeader } from '@admin/components/PageHeader';
 import { robotsLineTone } from './format';
 
 interface Group {
-    key: 'page' | 'condition' | 'post' | 'images';
+    key: 'page' | 'images';
     label: string;
     setting: string;
     enabled: boolean;
@@ -39,11 +39,9 @@ interface RobotsTest {
 
 const KEY = ['seo', 'sitemap'] as const;
 
-/** Sitemap priorities as each source sets them (PageSeoSource, ConditionSeoSource, PostSeoSource). */
+/** Sitemap priorities as each source sets them (PageSeoSource). */
 const CAPTIONS: Record<Group['key'], string> = {
     page: 'priority 0.8–1.0',
-    condition: 'priority 0.9',
-    post: 'priority 0.6',
     images: 'attached to their pages',
 };
 

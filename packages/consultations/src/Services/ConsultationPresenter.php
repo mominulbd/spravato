@@ -79,7 +79,6 @@ final readonly class ConsultationPresenter
             'insurance' => $request->insurance,
             'prior_treatment' => self::priorTreatment($request->prior_treatment),
             'contact_method' => $request->contact_method === null ? null : ['value' => $request->contact_method->value, 'label' => $request->contact_method->label()],
-            'quiz' => self::quiz($request->quiz_results),
             'source' => [
                 'page' => $request->source_page,
                 'previous_page' => $request->previous_page,
@@ -133,48 +132,6 @@ final readonly class ConsultationPresenter
             'source_page' => $request->source_page,
             'allowed_statuses' => array_map(fn ($status): string => $status->value, $request->status->allowedTransitions()),
         ];
-    }
-
-    /**
-     * The self-check results as staff read them (docs/QUIZ.md § Admin).
-     *
-     * @param  array<string, mixed>|null  $results
-     * @return array<string, mixed>|null
-     */
-    public static function quiz(?array $results): ?array
-    {
-        if ($results === null) {
-            return null;
-        }
-
-        $lines = fn (mixed $rows): array => array_values(array_map(fn (array $row): array => ['prompt' => (string) $row['prompt'], 'answer' => (string) $row['answer']], (array) $rows));
-
-        return [
-            'submitted_at' => $results['submitted_at'] ?? null,
-            'crisis' => (bool) ($results['crisis'] ?? false),
-            'scales' => array_values(array_map(fn (array $scale): array => [
-                'key' => (string) $scale['key'],
-                'label' => (string) $scale['label'],
-                'instrument' => (string) ($scale['instrument'] ?? ''),
-                'score' => (int) $scale['score'],
-                'max' => (int) $scale['max'],
-                'band' => is_array($scale['band'] ?? null) ? (string) $scale['band']['title'] : null,
-            ], (array) ($results['scales'] ?? []))),
-            'answers' => $lines($results['answers'] ?? []),
-            'feedback' => ($results['feedback'] ?? null) === null ? null : $lines($results['feedback']),
-        ];
-    }
-
-    /**
-     * "PHQ-9 9/27 · GAD-7 14/21", for the export.
-     *
-     * @param  array<string, mixed>|null  $results
-     */
-    public static function quizScores(?array $results): string
-    {
-        $quiz = self::quiz($results);
-
-        return $quiz === null ? '' : implode(' · ', array_map(fn (array $scale): string => ($scale['instrument'] ?: $scale['label']).' '.$scale['score'].'/'.$scale['max'], $quiz['scales']));
     }
 
     /** @return array{value: string, label: string}|null */

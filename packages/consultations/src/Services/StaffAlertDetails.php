@@ -41,13 +41,6 @@ final readonly class StaffAlertDetails
             $lines[] = 'Referred by: '.$request->referred_by;
         }
 
-        $scores = ConsultationPresenter::quizScores($request->quiz_results);
-
-        if ($scores !== '') {
-            $crisis = (bool) ($request->quiz_results['crisis'] ?? false);
-            $lines[] = 'Self-check: '.$scores.($crisis ? ' · flagged a crisis answer' : '');
-        }
-
         if ($request->message !== null) {
             $lines[] = 'Message: '.$request->message;
         }

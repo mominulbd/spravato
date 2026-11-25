@@ -30,8 +30,6 @@ class SeoSettingsController
             'sensitive_paths' => SeoSettings::SENSITIVE_PATHS,
             'examples' => [
                 'page' => $titles->for('page', 'TMS therapy'),
-                'condition' => $titles->for('condition', 'OCD'),
-                'post' => $titles->for('post', 'What a TMS session feels like', ['category' => 'Guides']),
             ],
             'clinic' => $schema->clinic(),
             'default_og_image' => $media->present(is_int($all['default_og_image_id']) ? $all['default_og_image_id'] : null),

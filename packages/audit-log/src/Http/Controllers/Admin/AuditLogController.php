@@ -24,7 +24,7 @@ class AuditLogController
         'sign_in' => ['auth.'],
         'users' => ['user.', 'permission.', 'role.'],
         'consultations' => ['consultation'],
-        'content' => ['page.', 'post.', 'condition.', 'collection', 'menu', 'media.', 'quiz'],
+        'content' => ['page.', 'collection', 'menu', 'media.'],
         'seo' => ['seo', 'redirect.', 'sitemap'],
         'settings' => ['setting'],
         'audit' => ['audit.'],

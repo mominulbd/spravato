@@ -47,8 +47,6 @@ class SeoSettings
                 'site_name' => ['default' => 'UPTMS', 'rules' => ['required', 'string', 'max:60']],
                 'separator' => ['default' => '|', 'rules' => ['required', 'in:'.implode(',', self::SEPARATORS)]],
                 'template_page' => ['default' => '%title% %sep% %site%', 'rules' => $template],
-                'template_condition' => ['default' => '%title% Treatment in University Place, WA %sep% %site%', 'rules' => $template],
-                'template_post' => ['default' => '%title% %sep% %category% %sep% %site%', 'rules' => $template],
                 'default_og_image_id' => ['default' => null, 'rules' => ['nullable', 'integer']],
             ],
             'organization' => [
@@ -72,8 +70,6 @@ class SeoSettings
             ],
             'sitemap' => [
                 'include_pages' => ['default' => true, 'rules' => ['boolean']],
-                'include_conditions' => ['default' => true, 'rules' => ['boolean']],
-                'include_posts' => ['default' => true, 'rules' => ['boolean']],
                 'include_images' => ['default' => true, 'rules' => ['boolean']],
                 'include_lastmod' => ['default' => true, 'rules' => ['boolean']],
                 'indexnow' => ['default' => true, 'rules' => ['boolean']],

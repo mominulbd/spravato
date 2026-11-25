@@ -16,7 +16,7 @@ interface SettingsPayload {
     separators: string[];
     /** Paths the website keeps tag-free while the exclusion is on. */
     sensitive_paths: string[];
-    examples: Record<'page' | 'condition' | 'post', string>;
+    examples: Record<'page', string>;
     clinic: Record<string, unknown> & { name: string; telephone?: string; address?: Record<string, string>; geo?: { latitude: number; longitude: number } };
     site_url: string;
 }
@@ -31,8 +31,6 @@ const TABS: { value: Group; label: string }[] = [
 
 const TEMPLATES: { key: string; label: string; example: Record<string, string> }[] = [
     { key: 'template_page', label: 'Pages', example: { title: 'TMS therapy' } },
-    { key: 'template_condition', label: 'Conditions', example: { title: 'OCD' } },
-    { key: 'template_post', label: 'Posts & resources', example: { title: 'What a TMS session feels like', category: 'Guides' } },
 ];
 
 /** Figma 23: site-wide defaults that every page's SEO tab falls back to. */
@@ -65,7 +63,7 @@ function Form({ group, data }: { group: Group; data: SettingsPayload }) {
     const bool = (key: string) => values[key] === true;
 
     const keys: Record<Group, string[]> = {
-        general: ['site_name', 'separator', 'template_page', 'template_condition', 'template_post', 'default_og_image_id'],
+        general: ['site_name', 'separator', 'template_page', 'default_og_image_id'],
         organization: ['schema_type', 'medical_specialty', 'logo_id', 'price_range'],
         social: ['x_handle'],
         verification: ['google', 'bing'],

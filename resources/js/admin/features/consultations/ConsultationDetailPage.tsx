@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { ArrowLeft, Check, Ellipsis, Info, LockKeyhole, Mail, Phone, Siren, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Ellipsis, Info, LockKeyhole, Mail, Phone, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ApiError } from '@shared/api/client';
 import { can } from '@shared/auth/can';
@@ -8,7 +8,7 @@ import { Avatar, Badge, Button, ButtonLink, Card, ConfirmDialog, Dropdown, Empty
 import { useCurrentUser } from '@admin/app/AuthProvider';
 import { useAddNote, useAssignees, useConsultation, useDeleteConsultation, useUpdateConsultation } from './api';
 import { STATUS_LABELS, receivedLabel, splitTitle, waitingLabel } from './format';
-import type { ConsultationDetail, ConsultationQuiz, ConsultationStatus, QuizAnswerLine } from './types';
+import type { ConsultationDetail, ConsultationStatus } from './types';
 
 const STATUSES: ConsultationStatus[] = ['new', 'contacted', 'scheduled', 'closed', 'spam'];
 
@@ -154,7 +154,6 @@ function Detail({ request }: { request: ConsultationDetail }) {
             <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="flex min-w-0 flex-col gap-5">
                     <ContactCard request={request} />
-                    {request.quiz && <QuizResultsCard quiz={request.quiz} />}
                     <NotesCard request={request} canAdd={canUpdate} />
                 </div>
                 <div className="flex min-w-0 flex-col gap-5">
@@ -194,7 +193,7 @@ function Detail({ request }: { request: ConsultationDetail }) {
 function receivedLine(request: ConsultationDetail): string {
     const received = new Date(request.received_at);
     const when = `${received.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} at ${received.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-    const page = request.origin === 'quiz' ? 'the self-check' : request.source.page === '/contact' ? 'the Contact page' : request.source.page;
+    const page = request.source.page === '/contact' ? 'the Contact page' : request.source.page;
     const waiting = request.waiting_minutes !== null ? ` · waiting ${waitingLabel(request.waiting_minutes).replace(' d', ' days').replace(' h', ' hours').replace(' min', ' minutes').replace(/\b1 (day|hour|minute)s/g, '1 $1')}` : '';
 
     return `Received ${when}${page ? ` from ${page}` : ''}${waiting}`;
@@ -262,78 +261,6 @@ function ContactCard({ request }: { request: ConsultationDetail }) {
                 Keep clinical details in the EHR. Notes here are for scheduling and follow-up only.
             </p>
         </Card>
-    );
-}
-
-/** The self-check behind a request: scores the server computed, then every answer. */
-function QuizResultsCard({ quiz }: { quiz: ConsultationQuiz }) {
-    return (
-        <Card className="flex flex-col gap-[22px] rounded-sheet p-7">
-            <CardTitle title="Self-check results" description="Screening scores computed by the server · not a diagnosis" />
-            {quiz.crisis && (
-                <div role="alert" className="flex items-start gap-3 rounded-[16px] bg-danger-soft px-4 py-3.5 text-danger">
-                    <Siren className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-                    <div className="flex flex-col gap-0.5">
-                        <p className="font-semibold">Thoughts of self-harm reported</p>
-                        <p className="text-admin-small">They answered the self-harm question above “Not at all” and were shown the 988 crisis line. Call them back first.</p>
-                    </div>
-                </div>
-            )}
-            {quiz.scales.length > 0 && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                    {quiz.scales.map((scale) => (
-                        <ScaleGauge key={scale.key} scale={scale} />
-                    ))}
-                </div>
-            )}
-            <AnswerList title="Answers" lines={quiz.answers} />
-            {quiz.feedback && quiz.feedback.length > 0 && <AnswerList title="Feedback on the self-check" lines={quiz.feedback} />}
-        </Card>
-    );
-}
-
-function ScaleGauge({ scale }: { scale: ConsultationQuiz['scales'][number] }) {
-    const percent = scale.max > 0 ? Math.min(100, Math.max(0, (scale.score / scale.max) * 100)) : 0;
-
-    return (
-        <div className="flex min-w-0 flex-col gap-3 rounded-[16px] bg-paper p-5">
-            <div className="flex items-baseline justify-between gap-3">
-                <p className="font-display text-[10px] leading-[1.3] font-bold tracking-[1.1px] text-ink-soft uppercase">
-                    {scale.label}
-                    {scale.instrument ? ` · ${scale.instrument}` : ''}
-                </p>
-                <p className="shrink-0 text-admin-small text-ink-soft">
-                    <span className="font-display text-[22px] leading-none font-bold text-ink">{scale.score}</span> / {scale.max}
-                </p>
-            </div>
-            <div
-                role="meter"
-                aria-label={`${scale.label} score`}
-                aria-valuemin={0}
-                aria-valuemax={scale.max}
-                aria-valuenow={scale.score}
-                className="relative h-2 rounded-full bg-[linear-gradient(90deg,var(--color-success),var(--color-warning),var(--color-danger))]"
-            >
-                <span aria-hidden="true" className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-navy shadow" style={{ left: `${percent}%` }} />
-            </div>
-            <p className="text-admin-body font-semibold break-words text-ink">{scale.band}</p>
-        </div>
-    );
-}
-
-function AnswerList({ title, lines }: { title: string; lines: QuizAnswerLine[] }) {
-    return (
-        <div className="flex flex-col gap-2">
-            <p className="font-display text-[10px] leading-[1.3] font-bold tracking-[1.1px] text-ink-soft uppercase">{title}</p>
-            <dl className="flex flex-col divide-y divide-line rounded-[16px] border border-line">
-                {lines.map((line, i) => (
-                    <div key={i} className="grid gap-1 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:gap-4">
-                        <dt className="text-admin-small break-words text-ink-soft">{line.prompt.replace(/\*/g, '')}</dt>
-                        <dd className="text-admin-body font-semibold break-words whitespace-pre-line text-ink">{line.answer || <span className="font-normal text-ink-soft">—</span>}</dd>
-                    </div>
-                ))}
-            </dl>
-        </div>
     );
 }
 

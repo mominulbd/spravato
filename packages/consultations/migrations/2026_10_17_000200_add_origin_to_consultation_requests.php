@@ -7,9 +7,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Requests can now come from the self-check (docs/QUIZ.md). `origin` says
- * which form sent it; `quiz_results` holds the answers, scores and feedback,
- * encrypted like everything else a person told the clinic.
+ * `origin` says which website form sent the request. (The self-check and its
+ * encrypted `quiz_results` column were removed for Spravato before any deploy.)
  */
 return new class extends Migration
 {
@@ -17,14 +16,13 @@ return new class extends Migration
     {
         Schema::table('consultation_requests', function (Blueprint $table): void {
             $table->string('origin', 10)->default('form')->after('topic');
-            $table->mediumText('quiz_results')->nullable()->after('prior_treatment')->comment('encrypted JSON');
         });
     }
 
     public function down(): void
     {
         Schema::table('consultation_requests', function (Blueprint $table): void {
-            $table->dropColumn(['origin', 'quiz_results']);
+            $table->dropColumn('origin');
         });
     }
 };

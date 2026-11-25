@@ -18,8 +18,6 @@ final readonly class SitemapBuilder
     /** Source type → settings key and the label of Figma 22. */
     public const array GROUPS = [
         'page' => ['setting' => 'include_pages', 'label' => 'Pages'],
-        'condition' => ['setting' => 'include_conditions', 'label' => 'Conditions'],
-        'post' => ['setting' => 'include_posts', 'label' => 'Posts & resources'],
     ];
 
     public function __construct(private SeoSources $sources, private SeoSettings $settings, private MediaPresenter $media) {}
@@ -52,13 +50,6 @@ final readonly class SitemapBuilder
                     return $found === null ? null : ['url' => $found['url'], 'alt' => $found['alt']];
                 }, $subject->images))),
             ];
-        }
-
-        // The guides index is an app route, not a CMS record: it follows its posts.
-        $posts = array_filter($entries, fn (array $e): bool => $e['type'] === 'post');
-        if ($posts !== []) {
-            $latest = array_filter(array_column($posts, 'lastmod'));
-            $entries[] = ['path' => '/resources', 'type' => 'post', 'lastmod' => $withDates && $latest !== [] ? max($latest) : null, 'priority' => 0.7, 'images' => []];
         }
 
         usort($entries, fn (array $a, array $b): int => [$b['priority'], $a['path']] <=> [$a['priority'], $b['path']]);

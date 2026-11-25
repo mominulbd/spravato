@@ -26,8 +26,7 @@ export interface ConsultationRow {
     scheduled_at: string | null;
     closed_at: string | null;
     source_page: string | null;
-    /** `quiz` when it came from the self-check (docs/QUIZ.md). */
-    origin: 'form' | 'quiz';
+    origin: 'form';
     allowed_statuses: ConsultationStatus[];
     /** Masked: "Daniel R. · (253) •••-0198". */
     contact: string;
@@ -49,28 +48,6 @@ export interface ConsultationNote {
 }
 
 /** The self-check answers and server-computed scores (docs/QUIZ.md "Admin"). */
-export interface QuizScaleResult {
-    key: string;
-    label: string;
-    instrument: string;
-    score: number;
-    max: number;
-    band: string;
-}
-
-export interface QuizAnswerLine {
-    prompt: string;
-    answer: string;
-}
-
-export interface ConsultationQuiz {
-    submitted_at: string;
-    crisis: boolean;
-    scales: QuizScaleResult[];
-    answers: QuizAnswerLine[];
-    feedback: QuizAnswerLine[] | null;
-}
-
 export interface ConsultationDetail extends Omit<ConsultationRow, 'contact'> {
     name: string;
     phone: string;
@@ -84,7 +61,6 @@ export interface ConsultationDetail extends Omit<ConsultationRow, 'contact'> {
     contact_method: Option | null;
     source: { page: string | null; previous_page: string | null; first_touch: string; utm: Record<string, string> | null; device: string | null };
     privacy: { view_count: number; deletes_on: string; retention_days: number };
-    quiz: ConsultationQuiz | null;
     notes: ConsultationNote[];
     activity: ConsultationActivity[];
 }

@@ -280,9 +280,6 @@ function SettingsForm({ saved }: { saved: ClinicSettings }) {
                     <SettingsCard title="Testimonials disclaimer" description="Under patient voices.">
                         <Textarea label="Text" rows={3} maxLength={300} value={disclaimers.testimonials} error={err('disclaimers').testimonials} onChange={(event) => patch('disclaimers', { testimonials: event.target.value })} />
                     </SettingsCard>
-                    <SettingsCard title="Self-check disclaimer" description="Beside the quiz.">
-                        <Textarea label="Text" rows={3} maxLength={300} value={disclaimers.quiz} error={err('disclaimers').quiz} onChange={(event) => patch('disclaimers', { quiz: event.target.value })} />
-                    </SettingsCard>
                 </div>
             )}
 

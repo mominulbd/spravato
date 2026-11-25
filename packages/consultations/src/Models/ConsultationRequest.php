@@ -35,7 +35,6 @@ use Uptms\Permissions\Contracts\HasPermissions;
  * @property ContactMethod|null $contact_method
  * @property ConsultationTopic $topic
  * @property ConsultationOrigin $origin
- * @property array{submitted_at: string, crisis: bool, scales: list<array<string, mixed>>, answers: list<array{step: string, prompt: string, answer: string}>, feedback: list<array{step: string, prompt: string, answer: string}>|null}|null $quiz_results encrypted
  * @property BestTime|null $best_time
  * @property ConsultationStatus $status
  * @property int|null $assigned_to
@@ -68,7 +67,7 @@ class ConsultationRequest extends Model
     protected $attributes = ['origin' => 'form'];
 
     /** Never serialised by accident: presenters choose what leaves the API. */
-    protected $hidden = ['name', 'phone', 'email', 'message', 'referred_by', 'insurance', 'prior_treatment', 'quiz_results', 'phone_hash', 'search_index'];
+    protected $hidden = ['name', 'phone', 'email', 'message', 'referred_by', 'insurance', 'prior_treatment', 'phone_hash', 'search_index'];
 
     protected function casts(): array
     {
@@ -80,7 +79,6 @@ class ConsultationRequest extends Model
             'referred_by' => 'encrypted',
             'insurance' => 'encrypted',
             'prior_treatment' => 'encrypted',
-            'quiz_results' => 'encrypted:array',
             'origin' => ConsultationOrigin::class,
             'topic' => ConsultationTopic::class,
             'best_time' => BestTime::class,

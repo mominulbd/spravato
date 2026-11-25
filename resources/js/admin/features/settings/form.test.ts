@@ -8,7 +8,7 @@ const settings: ClinicSettings = {
         email: 'contact@uptms.com', latitude: 47.2271, longitude: -122.5418, service_area_label: 'Greater Tacoma', service_area: ['Tacoma'], main_site_url: '', social: [],
     },
     announcement: { enabled: false, text: '', link_label: '', link_url: '' },
-    disclaimers: { crisis: 'Call 988.', crisis_short: 'Call 988.', insurance: '', testimonials: '', quiz: '' },
+    disclaimers: { crisis: 'Call 988.', crisis_short: 'Call 988.', insurance: '', testimonials: '' },
     privacy: { consultation_retention_days: 365, staff_notification_email: '', staff_alert_details: true },
     security: { two_factor_login: false },
     hours: {

@@ -75,16 +75,3 @@ it('spells a request out for the staff alert and says so when an answer is missi
         'Therapy or antidepressants tried: Not given',
     ]);
 });
-
-it('adds the self-check scores to the staff alert and flags a crisis answer', function () {
-    $request = new ConsultationRequest(['name' => 'Maya Chen', 'phone' => '(253) 555-0177', 'topic' => ConsultationTopic::TmsDepression->value]);
-    $request->quiz_results = [
-        'submitted_at' => now()->toIso8601String(),
-        'crisis' => true,
-        'scales' => [['key' => 'depression', 'label' => 'Depression', 'instrument' => 'PHQ-9', 'score' => 18, 'max' => 27, 'band' => ['title' => 'Moderately severe depression']]],
-        'answers' => [],
-        'feedback' => null,
-    ];
-
-    expect((new StaffAlertDetails)->lines($request))->toContain('Self-check: PHQ-9 18/27 · flagged a crisis answer');
-});

@@ -46,7 +46,6 @@ final class SettingsRegistry
                 'crisis_short' => ['default' => 'Not a crisis service. Call or text 988 for crisis support; call 911 for an immediate emergency.', 'rules' => ['required', 'string', 'max:160']],
                 'insurance' => ['default' => '', 'rules' => ['nullable', 'string', 'max:500']],
                 'testimonials' => ['default' => '', 'rules' => ['nullable', 'string', 'max:300']],
-                'quiz' => ['default' => 'This self-check is educational. It is not a diagnosis and does not determine eligibility for treatment. Nothing is sent or saved.', 'rules' => ['nullable', 'string', 'max:300']],
             ],
             'privacy' => [
                 'consultation_retention_days' => ['default' => 365, 'rules' => ['required', 'integer', 'between:30,3650']],

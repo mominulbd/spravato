@@ -30,7 +30,6 @@ export interface DisclaimerSettings {
     crisis_short: string;
     insurance: string;
     testimonials: string;
-    quiz: string;
 }
 
 export interface PrivacySettings {

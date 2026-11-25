@@ -8,13 +8,11 @@ namespace Uptms\Consultations\Domain\Enums;
 enum ConsultationOrigin: string
 {
     case Form = 'form';
-    case Quiz = 'quiz';
 
     public function label(): string
     {
         return match ($this) {
             self::Form => 'Consultation form',
-            self::Quiz => 'Self-check',
         };
     }
 }

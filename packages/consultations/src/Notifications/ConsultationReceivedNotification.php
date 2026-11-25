@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notification;
 /**
  * The receipt the person gets after sending the qualification form or the
  * self-check. Health privacy: it confirms the request and repeats the
- * reference, never the name, the answers, the topic or the quiz results —
+ * reference, never the name, the answers or the topic —
  * so a shared or forwarded mailbox learns nothing about them.
  */
 final class ConsultationReceivedNotification extends Notification

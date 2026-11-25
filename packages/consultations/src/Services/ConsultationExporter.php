@@ -21,7 +21,7 @@ final readonly class ConsultationExporter
 
     private const array HEADER = [
         'Reference', 'Received', 'Status', 'Topic', 'Name', 'Phone', 'Email', 'Insurance', 'Tried therapy / antidepressants',
-        'Preferred contact', 'Best time to call', 'Referred by', 'Origin', 'Self-check scores',
+        'Preferred contact', 'Best time to call', 'Referred by', 'Origin',
         'Message', 'Assigned to', 'Follow-up by', 'Contacted', 'Scheduled', 'Closed', 'Page',
     ];
 
@@ -62,7 +62,6 @@ final readonly class ConsultationExporter
                         $request->best_time?->label(),
                         $request->referred_by,
                         $request->origin->label(),
-                        ConsultationPresenter::quizScores($request->quiz_results),
                         $request->message,
                         $request->assigned_to === null ? '' : ($names[$request->assigned_to]['name'] ?? ''),
                         $this->time($request->follow_up_at, $timezone),

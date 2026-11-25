@@ -91,7 +91,6 @@ export function ConsultationsPage() {
                     </Link>
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-admin-small text-ink-soft">
                         {row.reference}
-                        {row.origin === 'quiz' && <Badge tone="info">Self-check</Badge>}
                     </span>
                 </div>
             ),
