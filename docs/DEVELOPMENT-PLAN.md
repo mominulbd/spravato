@@ -1,6 +1,6 @@
 # Spravato — Development Plan
 
-Status: **Phase 0 done** (2026-11-25): `site/` (Next.js 16.4.6) on one origin with Laravel, `/admin/login`, Spravato databases, posts/quiz/conditions removed, CI, deploy configs (`deploy/`), docs. **Next: Phase 1** · supersedes the two-repository layout in `ROADMAP.md` and `ARCHITECTURE.md` §1
+Status: **Phase 1 done** (2026-11-25): the Spravato page at `/` renders from the CMS and matches the Figma desktop frame. **Next: Phase 2** (consultation dialog) · supersedes the two-repository layout in `ROADMAP.md` and `ARCHITECTURE.md` §1
 
 **Goal:** turn the static Spravato landing page (Figma file `Ok7lXCmg2hLZ8iurI1p85j`, page "Spravato"; the static HTML prototype was removed from the repo on 2026-11-25) into a CMS-driven page, served by a **Next.js front end that lives inside this Laravel project**, with the consultation modal feeding the existing encrypted inbox. Staff sign in at **`/admin/login`**.
 
@@ -104,6 +104,17 @@ Map every section of the Figma Spravato page to a block type (reuse existing one
 | Tests | Pest: block schemas, seeder output, public page shape; Vitest: each block renders from fixture; Playwright: edit hero title → publish → `/` shows it |
 
 **Done when:** `/` matches the Figma Spravato page at all three widths, every word comes from the API, and a published edit appears without a redeploy.
+
+**As built (2026-11-25):**
+- New block types `landing_hero`, `criteria`, `visit_steps`, `schedule`, `video_pair`, `care_team`, `coverage_location`; `media_text`, `faq` (plus `aside_links`) and `cta_band` reused. Copy from Figma in `PagesContentSeeder::home()`, FAQs in the `spravato` group, team text updated in Collections.
+- Photos exported from Figma into `database/seeders/assets/spravato` and uploaded through the media pipeline; the logos are static in `site/public/brand`. The provider photos are the existing team photos (byte-identical).
+- Official documents: the `documents` menu (footer) and the FAQ card / "Read the Medication Guide" link appear once `spravato-medication-guide.pdf`, `spravato-prescribing-information.pdf` and `spravato-instructions-for-use.pdf` are placed in `database/seeders/assets/spravato` and seeded, or uploaded in the admin.
+- Videos: covers only; the play button appears once a video address is set on the block (no official URLs confirmed yet). Nothing loads from a video host until play.
+- "Request a consultation" buttons link to `#consultation`; the dialog that answers it is Phase 2.
+- Figma has a desktop frame only; tablet and phone layouts are stacked versions, reviewed at 390 px.
+- The seeded TMS and Contact pages (UPTMS) still exist in the CMS but the site does not render them; remove them with their tests later.
+- Not in the design and left out: Important Safety Information (§4).
+
 
 ### Phase 2 — Consultation modal
 

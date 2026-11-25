@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders\Content;
 
 use Illuminate\Database\Seeder;
+use Uptms\Media\Models\Media;
 use Uptms\Pages\Actions\PublishPageAction;
 use Uptms\Pages\Actions\SavePageContentAction;
 use Uptms\Pages\Domain\Enums\PageTemplate;
@@ -12,8 +13,9 @@ use Uptms\Pages\Models\Page;
 use Uptms\Publishing\Domain\Enums\PublishStatus;
 
 /**
- * Home, TMS, Contact and Quiz exactly as designed in Figma (Version C,
- * node 25:2), plus the Privacy policy (no design; one Legal-template rich
+ * The Spravato landing page at / (Figma "Spravato"), the UPTMS TMS and
+ * Contact pages (Figma Version C, node 25:2; not rendered by site/ yet),
+ * plus the Privacy policy (no design; one Legal-template rich
  * text block), built from the block library and published. `{phone}`,
  * `{email}` and `tel:clinic` are replaced by the website with the details
  * from Clinic settings, so a new number needs no page edits. Links the
@@ -32,7 +34,7 @@ class PagesContentSeeder extends Seeder
 
     public function run(): void
     {
-        $this->page('Home', 'home', PageTemplate::Landing, $this->home(), home: true);
+        $this->page('Spravato', 'home', PageTemplate::Landing, $this->home(), home: true);
         $this->page('TMS therapy', 'tms', PageTemplate::Landing, $this->tms());
         $this->page('Contact', 'contact', PageTemplate::Contact, $this->contact());
         $this->page('Privacy policy', 'privacy', PageTemplate::Legal, $this->privacy());
@@ -79,160 +81,170 @@ class PagesContentSeeder extends Seeder
         return ['label' => $label, 'href' => $href];
     }
 
-    /** @return list<array<string, mixed>> */
+    /**
+     * The Spravato landing page (Figma "Spravato", desktop 1440). Every
+     * "Request a consultation" button links to #consultation, which opens
+     * the consultation dialog (DEVELOPMENT-PLAN.md, Phase 2).
+     *
+     * @return list<array<string, mixed>>
+     */
     private function home(): array
     {
+        $consult = $this->link('Request a consultation', '#consultation');
+        $guide = $this->document('spravato-medication-guide.pdf');
+
         return [
-            $this->block('hero', [
-                'eyebrow' => 'Deep TMS therapy in University Place, WA',
-                'headline' => 'When depression won’t lift, *explore a new way forward.*',
-                'subheading' => 'Medication hasn’t helped enough? You deserve a conversation about what comes next.',
-                'body' => 'Explore TMS therapy for depression with the team at University Place TMS Clinic, serving Greater Tacoma. We also offer a dedicated Deep TMS treatment pathway for OCD.',
-                'primary' => $this->link('Find Out If You Qualify', '/contact#consultation-form'),
-                'primary_opens_form' => true,
-                'form_title' => 'Find out if you qualify for TMS',
-                'note' => 'Takes about a minute. Prefer a conversation? Your initial phone consultation is free.',
-                'aside' => 'image',
-                'image' => SiteMediaSeeder::id('tms-clinic-care.jpg'),
-                'card_eyebrow' => 'Deep TMS · BrainsWay technology',
-                'card_title' => 'Care starts with understanding you.',
-                'card_body' => 'Learn about treatment, ask your questions, and decide your next step with a clinician.',
-                'show_founder' => true,
-                'show_trust_points' => true,
-            ]),
-            $this->block('section_nav', ['lead' => 'Find what you need', 'menu' => 'section-nav']),
-            $this->block('copy_panel', [
-                'rail' => 'You don’t have to figure this out alone',
-                'anchor' => 'why-tms',
-                'headline' => 'Still searching for relief? *Let’s talk about your options.*',
-                'subheading' => 'Living with persistent depression can make everyday things feel harder. If your current treatment is not enough, asking about another option is a reasonable next step.',
-                'body' => 'At University Place TMS Clinic & General Psychiatry, care includes Deep TMS, medication management, and mental health support for older adults. We begin with your history, your concerns, and the questions that matter to you.',
-                'cta' => $this->link('Talk with our team for free →', '/contact'),
-                'cta_opens_form' => true,
-                'form_title' => 'Find out if you qualify for TMS',
-                'panel_title' => 'Does any of this sound familiar?',
-                'panel_items' => [
-                    'Antidepressants have not provided enough relief.',
-                    'Medication side effects are affecting your daily life.',
-                    'Depression continues despite treatment.',
-                    'You are helping a loved one explore what comes next.',
-                ],
-                'panel_note' => 'You don’t need to know whether TMS is right for you before you call. That is a conversation we can start together.',
+            $this->block('landing_hero', [
+                'eyebrow' => 'Spravato® treatment · University Place & Tacoma',
+                'headline' => 'Could Spravato® be *a next step for you?*',
+                'lead' => 'When depression has been hard to treat, it helps to have someone listen.',
+                'body' => 'Explore clinician-guided esketamine treatment at University Place TMS Clinic, near Tacoma. Understand your options, ask your questions, and take the next step with a care team.',
+                'primary' => $consult,
+                'secondary' => self::CALL,
+                'image' => SiteMediaSeeder::id('spravato-nasal-spray-use.jpg'),
             ]),
             $this->block('media_text', [
-                'rail' => 'Understanding Deep TMS',
-                'anchor' => 'tms-overview',
-                'headline' => 'A different approach to depression treatment.',
-                'body' => "TMS stands for transcranial magnetic stimulation. It uses magnetic pulses to stimulate brain areas involved in mood regulation. Treatment takes place while you are awake, without surgery or anesthesia.\n\nOur clinic uses BrainsWay Deep TMS technology. A provider reviews your treatment history and health needs before recommending whether it is an option for you.",
+                'rail' => 'Understanding your options',
+                'anchor' => 'what-is-spravato',
+                'headline' => 'What is Spravato® *(esketamine) treatment?*',
+                'body' => "Depression can persist even after trying antidepressants. Spravato is an FDA-approved esketamine nasal spray for adults with treatment-resistant depression — on its own or with an oral antidepressant.\n\nAt our University Place clinic, the first step is a conversation about your previous treatment, current symptoms, health history and goals. A qualified clinician determines whether Spravato could be appropriate for you.",
                 'facts' => [
-                    ['value' => 'Outpatient', 'label' => 'Care without a hospital stay'],
-                    ['value' => 'Individualized', 'label' => 'A plan based on your evaluation'],
+                    ['value' => 'In clinic', 'label' => 'Not a take-home medicine'],
+                    ['value' => '2+ hours', 'label' => 'Monitoring after each dose'],
                 ],
-                'disclaimer' => 'TMS can have side effects, including headache or scalp discomfort; seizures are a rare serious risk. Your provider will discuss suitability, benefits, and risks.',
-                'primary' => $this->link('Request a Free Phone Consult', '/contact'),
-                'link' => $this->link('How TMS works →', '/tms'),
-                'image' => SiteMediaSeeder::id('tms-treatment-session.jpg'),
+                'primary' => $consult,
+                'link' => $guide === null ? null : $this->link('Read the Medication Guide →', $guide),
+                'image' => SiteMediaSeeder::id('spravato-product.jpg'),
                 'image_side' => 'left',
-                'caption_eyebrow' => 'TMS treatment illustration',
-                'caption' => 'Your clinical plan is individualized.',
+                'caption_eyebrow' => 'Prescription nasal spray',
+                'caption' => 'Self-administered under a healthcare professional’s supervision.',
             ]),
-            $this->block('team', [
-                'rail' => 'Meet your care team',
+            $this->block('criteria', [
+                'rail' => 'When treatment hasn’t been enough',
+                'anchor' => 'eligibility',
+                'headline' => 'Is Spravato *right for you?*',
+                'intro' => 'You do not need to figure that out alone. A consultation can help you understand treatment-resistant depression and the options worth considering.',
+                'primary' => $this->link('Discuss your eligibility', '#consultation'),
+                'items' => [
+                    ['title' => 'You are an adult living with depression', 'body' => 'Spravato is approved for adults. Your clinician reviews the diagnosis and the symptoms affecting your life.'],
+                    ['title' => 'Previous antidepressants haven’t helped enough', 'body' => 'Bring details of medicines you have tried, including how long you took them and how you responded.'],
+                    ['title' => 'You want to understand the practical steps', 'body' => 'Discuss health considerations, supervised appointments, a ride home, and insurance requirements before deciding.'],
+                ],
+                'note' => 'These are starting points for a clinical discussion, not an eligibility test. Benefits and risks are individual.',
+            ]),
+            $this->block('visit_steps', [
+                'rail' => 'What to expect at your appointment',
+                'anchor' => 'your-visit',
+                'headline' => 'Your visit, *one step at a time.*',
+                'intro' => 'Every dose is taken in clinic, under supervision, with time set aside for monitoring before you go home.',
+                'steps' => [
+                    ['title' => 'Talk with your clinician', 'body' => 'Review your treatment history, medicines, health needs and questions.'],
+                    ['title' => 'Take the nasal spray in clinic', 'body' => 'Your healthcare professional explains the device and supervises you as you use it.'],
+                    ['title' => 'Stay for observation', 'body' => 'The team monitors you for at least two hours and decides when you are ready to leave.'],
+                    ['title' => 'Leave with your arranged ride', 'body' => 'Do not drive or operate machinery until the next day after a restful sleep.'],
+                ],
+                'note_eyebrow' => 'Plan time for your care',
+                'note_body' => 'Allow for check-in, treatment and at least two hours of monitoring. Arrange a ride home for every visit.',
+                'note_caption' => 'Representative treatment setting supplied by SPRAVATO®. Not a photograph of the UPTMS clinic.',
+                'note_image' => SiteMediaSeeder::id('spravato-treatment-room-01.jpg'),
+                'note_cta' => $this->link('Talk through your first visit', '#consultation'),
+            ]),
+            $this->block('schedule', [
+                'rail' => 'Spravato treatment schedule',
+                'anchor' => 'schedule',
+                'headline' => 'Make a plan that *fits your care.*',
+                'lead' => 'Treatment-resistant depression care often starts with more frequent visits. Your prescriber reviews your response and adjusts the schedule over time.',
+                'body' => 'Ask how appointments, transportation and follow-up could work alongside your everyday commitments.',
+                'rows' => [
+                    ['period' => 'Weeks 1–4', 'title' => 'Twice weekly', 'body' => 'Initial treatment phase.'],
+                    ['period' => 'Weeks 5–8', 'title' => 'Once weekly', 'body' => 'Review your response with your prescriber.'],
+                    ['period' => 'Week 9 onward', 'title' => 'Individualized', 'body' => 'Weekly or every two weeks, as prescribed.'],
+                ],
+                'note' => 'General TRD schedule. Your clinician determines your dose, frequency and whether treatment should continue.',
+            ]),
+            $this->block('video_pair', [
+                'rail' => 'See what treatment involves',
+                'anchor' => 'videos',
+                'headline' => 'A clearer picture, *before your visit.*',
+                'intro' => 'Two resources from the official SPRAVATO® library. Watch here, then bring your questions to your care team.',
+                // Video addresses are added in the admin once the clinic confirms which official videos may be embedded.
+                'videos' => [
+                    ['title' => 'The treatment journey', 'body' => 'Learn what to expect before, during and after a visit.', 'poster' => SiteMediaSeeder::id('video-treatment-journey.jpg'), 'url' => ''],
+                    ['title' => 'How the nasal spray is used', 'body' => 'Official instructions to review with your healthcare professional.', 'poster' => SiteMediaSeeder::id('video-nasal-spray-use.png'), 'url' => ''],
+                ],
+            ]),
+            $this->block('care_team', [
+                'rail' => 'Your local care team',
                 'anchor' => 'care-team',
-                'headline' => 'Real people. *A personal approach to care.*',
-                'intro' => 'Get to know the team at University Place TMS Clinic before your first conversation.',
-                'primary' => $this->link('Talk With Our Care Team', '/contact'),
-                'primary_opens_form' => true,
-                'form_title' => 'Find out if you qualify for TMS',
-                'link' => $this->link('Meet the team on our main clinic website →', 'https://uptms.com'),
+                'headline' => 'People who take *time to listen.*',
+                'intro' => 'Thoughtful care starts with people who listen. Meet two members of the University Place TMS Clinic team serving patients across Greater Tacoma.',
+                'founder_link' => $this->link('Start a conversation →', '#consultation'),
+                'member_link' => $this->link('Ask the team a question →', '#consultation'),
             ]),
-            $this->block('cta_band', [
-                'tone' => 'sky',
-                'eyebrow' => 'A simple first step',
-                'headline' => 'Questions first. *Decisions together.*',
-                'body' => 'Ask about TMS, your insurance, or what an appointment involves. Start with a free phone consultation.',
-                'primary' => $this->link('Call Us · {phone}', 'tel:clinic'),
-                'link' => $this->link('Request a free consultation →', '/contact'),
-            ]),
-            $this->block('insurance', [
-                'rail' => 'Insurance & access',
-                'anchor' => 'insurance',
-                'headline' => 'Let’s make sense of your coverage.',
-                'intro' => 'Cost should be part of the conversation from the start. Ask our team about your plan, authorization requirements, and potential out-of-pocket costs.',
-                'questions_title' => 'What to ask before treatment',
-                'questions_cta' => $this->link('Ask About My Insurance', '/contact'),
-                'questions' => [
-                    'Is the clinic in network for my specific plan?',
-                    'Does my plan cover TMS for my diagnosis?',
-                    'What records or prior authorization are needed?',
-                    'What deductible or copay might apply?',
-                ],
-                'logos_title' => 'Our partners & coverage resources',
-                'logos_note' => 'Plans and programs featured on our current clinic website.',
-                'disclaimer_link' => $this->link('View current clinic listings →', 'https://uptms.com'),
-                'close_text' => 'Don’t see your plan? We can start with your questions.',
-                'close_cta' => $this->link('Call our team →', 'tel:clinic'),
-            ]),
-            $this->block('value_grid', [
-                'rail' => 'Why University Place TMS Clinic?',
-                'anchor' => 'why-uptms',
-                'headline' => 'Specialized treatment. *Support beyond the session.*',
-                'tiles' => [
-                    ['icon' => 'target', 'tone' => 'navy', 'title' => 'Deep TMS technology', 'body' => 'Explore treatment using the BrainsWay system with a plan selected through clinical evaluation.'],
-                    ['icon' => 'heart', 'tone' => 'white', 'title' => 'A person-first approach', 'body' => 'Bring your questions and your concerns. Your experience helps shape the conversation about care.'],
-                    ['icon' => 'arrow', 'tone' => 'white', 'title' => 'Psychiatric care, too', 'body' => 'Our clinic offers psychiatric services and medication management alongside Deep TMS.'],
-                    ['icon' => 'home', 'tone' => 'white', 'title' => 'Care close to home', 'body' => 'Visit us in University Place, serving people from the Greater Tacoma community.'],
-                    ['icon' => 'check', 'tone' => 'navy', 'title' => 'Coverage conversations', 'body' => 'Ask about your insurance and what needs to be checked before beginning treatment.'],
-                    ['icon' => 'sun', 'tone' => 'white', 'title' => 'Support for older adults', 'body' => 'Psychiatric care includes the needs of seniors and people living in supported care settings.'],
-                ],
-            ]),
-            $this->block('steps', [
-                'rail' => 'What happens next',
-                'anchor' => 'journey',
-                'headline' => 'One conversation. *A clearer path forward.*',
-                'steps_source' => 'collection',
-                'primary' => $this->link('Request My Free Phone Consultation', '/contact'),
-                'link' => $this->link('Request a free consultation →', '/contact'),
-            ]),
-            $this->block('testimonials', [
-                'rail' => 'Patient voices',
-                'anchor' => 'patient-voices',
-                'headline' => 'What our clients say.',
-                'intro' => 'Short excerpts published on the clinic’s current website.',
+            $this->block('coverage_location', [
+                'rail' => 'Spravato treatment near Tacoma',
+                'anchor' => 'coverage',
+                'headline' => 'Local care. *Practical answers.*',
+                'coverage_eyebrow' => 'Insurance & cost',
+                'coverage_title' => 'Questions about coverage?',
+                'coverage_body' => 'Coverage depends on your plan, medical-necessity criteria, prior authorization and network status. Ask the clinic about benefits verification and potential out-of-pocket costs before treatment begins.',
+                'coverage_items' => ['Benefits verification before you start', 'Prior authorization guidance', 'Clear notes on out-of-pocket costs'],
+                'coverage_cta' => $this->link('Ask about coverage & cost', '#consultation'),
+                'location_eyebrow' => 'University Place TMS Clinic',
+                'location_title' => 'A conversation close to home.',
+                'location_body' => 'Find us in University Place, close to Tacoma, Fircrest and Lakewood. Call the clinic for current appointment availability.',
             ]),
             $this->block('faq', [
-                'rail' => 'Good questions deserve clear answers',
+                'rail' => 'Frequently asked questions',
                 'anchor' => 'faq',
-                'headline' => 'Before you book.',
-                'intro' => 'There is no need to arrive with every answer. We’re here to help you understand the next step.',
-                'primary' => $this->link('Ask Us · {phone}', 'tel:clinic'),
-                'group' => 'home',
-                'aside_title' => 'Prefer to start privately?',
-                'aside_body' => 'The free TMS self-check takes a minute. Nothing is sent or saved.',
-                'aside_link' => $this->link('Request a free consultation →', '/contact'),
-                'footnote' => 'Information supports a conversation with your provider; it is not a diagnosis.',
-                'footnote_links' => [
-                    $this->link('NIMH depression', 'https://www.nimh.nih.gov/health/topics/depression'),
-                    $this->link('NIMH OCD', 'https://www.nimh.nih.gov/health/topics/obsessive-compulsive-disorder-ocd'),
-                ],
-            ]),
-            $this->block('location', [
-                'rail' => 'Find us in University Place',
-                'anchor' => 'location',
-                'headline' => 'Your next step is closer than you think.',
-                'show_card' => true,
-                'eyebrow' => 'University Place · Washington',
+                'headline' => 'A little clarity *can help.*',
+                'intro' => 'Practical answers about Spravato treatment. Bring any other questions to your consultation.',
+                'primary' => $this->link('Ask us · {phone}', 'tel:clinic'),
+                'group' => 'spravato',
+                'aside_title' => 'Prefer to read first?',
+                'aside_body' => 'Official SPRAVATO® documents to review with your provider.',
+                'aside_links' => $this->documentLinks(' →'),
             ]),
             $this->block('cta_band', [
                 'tone' => 'royal',
-                'eyebrow' => 'You’ve taken the first step by looking.',
-                'headline' => 'Let’s find your next step. *Together.*',
-                'body' => 'A free phone conversation can help you understand TMS, ask about insurance, and decide whether to schedule an evaluation.',
-                'primary' => $this->link('Request a Free Phone Consultation', '/contact'),
+                'anchor' => 'next-step',
+                'eyebrow' => 'You can start with a question',
+                'headline' => 'Let’s talk about *your next step.*',
+                'body' => 'Explore Spravato treatment in University Place with a team that takes time to understand your needs.',
+                'primary' => $consult,
                 'secondary' => self::CALL,
-                'link' => $this->link('Request a free consultation →', '/contact'),
             ]),
         ];
+    }
+
+    /**
+     * Links to the official documents that have been uploaded, in the
+     * Figma order. Empty until the PDFs are supplied.
+     *
+     * @return list<array{label: string, href: string}>
+     */
+    private function documentLinks(string $suffix = ''): array
+    {
+        $links = [];
+
+        foreach (SiteMediaSeeder::DOCUMENTS as $file => [, $title]) {
+            $href = $this->document($file);
+
+            if ($href !== null) {
+                $links[] = $this->link($title.$suffix, $href);
+            }
+        }
+
+        return $links;
+    }
+
+    /** Site-relative address of an uploaded official document, or null. */
+    private function document(string $file): ?string
+    {
+        $media = Media::query()->where('original_name', $file)->first();
+        $path = $media instanceof Media ? parse_url($media->url(), PHP_URL_PATH) : null;
+
+        return is_string($path) ? $path : null;
     }
 
     /** @return list<array<string, mixed>> */

@@ -21,7 +21,7 @@ final class SettingsRegistry
         return [
             'profile' => [
                 'name' => ['default' => 'University Place TMS Clinic & General Psychiatry', 'rules' => ['required', 'string', 'max:120']],
-                'tagline' => ['default' => 'Deep TMS and general psychiatric care for University Place and Greater Tacoma.', 'rules' => ['nullable', 'string', 'max:200']],
+                'tagline' => ['default' => 'A thoughtful next step in depression care. Serving University Place and the Greater Tacoma community.', 'rules' => ['nullable', 'string', 'max:200']],
                 'street' => ['default' => '4007 Bridgeport Way W, Suite B', 'rules' => ['required', 'string', 'max:120']],
                 'city' => ['default' => 'University Place', 'rules' => ['required', 'string', 'max:80']],
                 'state' => ['default' => 'WA', 'rules' => ['required', 'string', 'size:2', 'alpha']],

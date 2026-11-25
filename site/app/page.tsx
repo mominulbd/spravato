@@ -1,17 +1,34 @@
-/*
- * The Spravato landing page. Phase 0 shell: Phase 1 replaces this with the
- * published blocks read from Laravel (docs/DEVELOPMENT-PLAN.md).
- */
-export default function HomePage() {
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { BlockRenderer } from "@/components/blocks/BlockRenderer";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { getMenus, getPage, getSettings } from "@/lib/cms";
+
+/** The Spravato landing page: the published blocks of the page at `/`. */
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPage("/");
+
+  return {
+    title: typeof page?.seo.title === "string" ? page.seo.title : undefined,
+    description: typeof page?.seo.description === "string" ? page.seo.description : undefined,
+  };
+}
+
+export default async function HomePage() {
+  const [page, settings, menus] = await Promise.all([getPage("/"), getSettings(), getMenus()]);
+
+  if (!page) notFound();
+
+  const site = { settings, menus };
+
   return (
-    <main id="main" className="mx-auto flex min-h-dvh max-w-[1200px] flex-col justify-center gap-6 px-6 py-24">
-      <p className="font-display text-sm font-bold tracking-[0.12em] text-royal uppercase">Spravato® treatment · University Place &amp; Tacoma</p>
-      <h1 className="font-serif text-5xl leading-tight text-navy md:text-6xl">
-        Could Spravato® be a <span className="text-royal">next step</span> for you?
-      </h1>
-      <p className="max-w-2xl text-lg text-ink-soft">
-        The page is being built from the CMS. Content arrives in Phase 1.
-      </p>
-    </main>
+    <>
+      <SiteHeader settings={settings} />
+      <main id="main" className="flex flex-col">
+        <BlockRenderer blocks={page.blocks} site={site} />
+      </main>
+      <SiteFooter settings={settings} documents={menus.documents ?? []} />
+    </>
   );
 }

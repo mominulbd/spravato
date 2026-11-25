@@ -12,7 +12,8 @@ use Uptms\Media\Models\Media;
 use Uptms\Media\Models\MediaFolder;
 
 /**
- * Uploads the Figma photography and logos (database/seeders/assets/site)
+ * Uploads the Figma photography (database/seeders/assets/site and
+ * assets/spravato) and the official SPRAVATO® documents when present
  * through the real pipeline, so seeded images are re-encoded, get variants
  * and carry alt text like any upload. Idempotent by original file name.
  */
@@ -44,15 +45,40 @@ class SiteMediaSeeder extends Seeder
         'insurance-medicaid.jpg' => ['Insurance logos', 'Medicaid'],
     ];
 
+    /** The Spravato page (Figma "Spravato"): file → [folder, alt text]. */
+    private const array SPRAVATO = [
+        'spravato-nasal-spray-use.jpg' => ['Spravato', 'Close-up of a person positioning a SPRAVATO® 28 mg nasal spray device at their nostril'],
+        'spravato-product.jpg' => ['Spravato', 'SPRAVATO® 28 mg nasal spray device'],
+        'spravato-treatment-room-01.jpg' => ['Spravato', 'Representative treatment room with two armchairs, side tables and floor lamps'],
+        'video-treatment-journey.jpg' => ['Spravato', 'Treatment room with reclining chairs separated by curtains'],
+        'video-nasal-spray-use.png' => ['Spravato', 'Man wearing headphones, sitting back in a treatment chair'],
+    ];
+
+    /**
+     * Official documents, uploaded only when the PDF is in assets/spravato
+     * (they are not in the repository yet). file → [folder, title].
+     */
+    public const array DOCUMENTS = [
+        'spravato-medication-guide.pdf' => ['Documents', 'Medication Guide'],
+        'spravato-prescribing-information.pdf' => ['Documents', 'Prescribing Information'],
+        'spravato-instructions-for-use.pdf' => ['Documents', 'Instructions for Use'],
+    ];
+
     public function __construct(private readonly UploadMediaAction $upload) {}
 
     public function run(): void
     {
-        foreach (['Clinic photos', 'Team', 'Insurance logos', 'Share images', 'Documents'] as $order => $name) {
+        foreach (['Spravato', 'Clinic photos', 'Team', 'Insurance logos', 'Share images', 'Documents'] as $order => $name) {
             MediaFolder::query()->firstOrCreate(['slug' => str($name)->slug()->toString()], ['name' => $name, 'sort_order' => $order + 1]);
         }
 
-        foreach (self::FILES as $file => [$folder, $alt]) {
+        $files = [
+            ...array_map(fn (array $entry): array => [...$entry, 'site'], self::FILES),
+            ...array_map(fn (array $entry): array => [...$entry, 'spravato'], self::SPRAVATO),
+            ...array_map(fn (array $entry): array => [...$entry, 'spravato'], self::DOCUMENTS),
+        ];
+
+        foreach ($files as $file => [$folder, $alt, $dir]) {
             $existing = Media::query()->where('original_name', $file)->first();
 
             if ($existing instanceof Media) {
@@ -61,7 +87,12 @@ class SiteMediaSeeder extends Seeder
                 continue;
             }
 
-            $path = database_path('seeders/assets/site/'.$file);
+            $path = database_path("seeders/assets/{$dir}/{$file}");
+
+            if (! is_file($path)) {
+                continue; // an optional document that has not been supplied
+            }
+
             $media = $this->upload->execute(new UploadedFile($path, $file, null, null, true), MediaFolder::query()->where('name', $folder)->value('id'), null);
             $media->forceFill(['alt' => $alt])->saveQuietly();
         }

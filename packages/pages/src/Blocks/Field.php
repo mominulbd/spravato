@@ -42,7 +42,7 @@ final readonly class Field
 
     public static function headline(string $name, string $label = 'Headline', int $max = 120, bool $required = true): self
     {
-        return new self($name, 'headline', $label, $required, $max, 'Wrap words in *asterisks* to set them in blue italic, like the website.');
+        return new self($name, 'headline', $label, $required, $max, 'Wrap words in *asterisks* to set them in blue, like the website.');
     }
 
     public static function textarea(string $name, string $label, int $max = 320, bool $required = false, ?string $help = null): self

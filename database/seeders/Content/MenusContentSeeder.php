@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders\Content;
 
 use Illuminate\Database\Seeder;
+use Uptms\Media\Models\Media;
 use Uptms\Menus\Models\Menu;
 use Uptms\Menus\Services\MenuTree;
 use Uptms\Pages\Models\Page;
@@ -57,6 +58,8 @@ class MenusContentSeeder extends Seeder
             'footer-legal' => ['Footer · Legal', 'Small links in the footer’s bottom bar (privacy, accessibility).', [
                 $page('Privacy policy', '/privacy'),
             ]],
+            // Filled only once the PDFs are uploaded (SiteMediaSeeder::DOCUMENTS); an empty menu is refilled on the next seed.
+            'documents' => ['Official documents', 'The SPRAVATO® documents in the footer and the FAQ card.', $this->documents()],
         ];
 
         $order = 0;
@@ -73,5 +76,22 @@ class MenusContentSeeder extends Seeder
 
             $this->tree->save($menu, $items);
         }
+    }
+
+    /** @return list<array{label: string, type: string, url: string}> */
+    private function documents(): array
+    {
+        $items = [];
+
+        foreach (SiteMediaSeeder::DOCUMENTS as $file => [, $title]) {
+            $media = Media::query()->where('original_name', $file)->first();
+            $path = $media instanceof Media ? parse_url($media->url(), PHP_URL_PATH) : null;
+
+            if (is_string($path)) {
+                $items[] = ['label' => $title, 'type' => 'link', 'url' => $path];
+            }
+        }
+
+        return $items;
     }
 }

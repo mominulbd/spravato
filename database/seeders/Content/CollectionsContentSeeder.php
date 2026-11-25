@@ -37,8 +37,9 @@ class CollectionsContentSeeder extends Seeder
         // Joy first: the Contact team card lists her before Ayub (Figma 33:389); the founder card finds Ayub by is_founder.
         $this->add('team', TeamMember::class, [
             'name' => 'Joy Kiongo',
-            'role_title' => 'TMS Consultant',
-            'bio' => 'Your clinic contact for a conversation about TMS and next steps.',
+            'credentials' => 'Patient guidance',
+            'role_title' => 'TMS consultant',
+            'bio' => 'Helps people navigate questions about treatment options and practical next steps — what the process may involve and what information the clinical team needs.',
             'photo_id' => SiteMediaSeeder::id('joy-kiongo.jpg'),
             'show_on' => ['home', 'contact'],
             'schema_type' => 'Person',
@@ -46,8 +47,8 @@ class CollectionsContentSeeder extends Seeder
         $this->add('team', TeamMember::class, [
             'name' => 'Ayub Mwaura',
             'credentials' => 'MSN, PMHNP-BC',
-            'role_title' => 'Founder & psychiatric nurse practitioner',
-            'bio' => "Ayub is a board-certified psychiatric mental health nurse practitioner licensed in Washington. His background includes inpatient and outpatient mental health care.\n\nHe founded University Place TMS Clinic to bring together Deep TMS and psychiatric care in a setting centered on each person’s needs.",
+            'role_title' => 'Founder · Psychiatric nurse practitioner',
+            'bio' => 'A board-certified psychiatric nurse practitioner with experience across inpatient and outpatient mental health care, focused on personalized, evidence-informed treatment options.',
             'highlights' => ['Psychiatric mental health', 'Washington licensed', 'Inpatient & outpatient experience'],
             'photo_id' => SiteMediaSeeder::id('ayub-mwaura.jpg'),
             'show_on' => ['home', 'tms', 'contact'],
@@ -60,7 +61,7 @@ class CollectionsContentSeeder extends Seeder
             'role_title' => 'Clinical Manager',
             'bio' => 'Part of the team supporting your care at University Place.',
             'photo_id' => SiteMediaSeeder::id('cathy-mwangi.jpg'),
-            'show_on' => ['home'],
+            'show_on' => ['tms', 'contact'],
             'schema_type' => 'Person',
         ]);
     }
@@ -99,7 +100,18 @@ class CollectionsContentSeeder extends Seeder
             ['Is the self-check a clinical screening instrument?', 'No. It is a short educational navigation tool created for this website. It does not calculate a validated symptom score, diagnose depression or OCD, or determine clinical or insurance eligibility. The clinic’s initial phone consultation is a separate next step.'],
         ];
 
-        foreach (['home' => $home, 'tms' => $tms] as $group => $items) {
+        // The Spravato landing page (Figma "Spravato", section 08).
+        $spravato = [
+            ['What happens at a Spravato consultation?', 'We start with your questions. A clinician reviews your health and treatment history, discusses potential benefits and risks, and explains whether Spravato or another approach may fit your needs. You can also ask about scheduling, insurance and transport.'],
+            ['Can I take Spravato at home?', 'No. You self-administer the nasal spray under healthcare-provider supervision in a setting certified in the SPRAVATO® REMS program. Your provider monitors you for at least two hours afterwards.'],
+            ['Does insurance cover Spravato treatment?', 'Some plans cover treatment when their requirements are met. Coverage and cost vary by insurer, benefits, prior authorization and network status. Ask the clinic to explain the benefits-verification process; coverage is not guaranteed.'],
+            ['Can I drive after Spravato?', 'No. Arrange a ride home after every visit. Do not drive, operate machinery or do activities requiring full alertness until the next day after a restful sleep.'],
+            ['What is the difference between Spravato and TMS?', 'Spravato uses esketamine nasal spray under clinical supervision. TMS uses magnetic stimulation during outpatient appointments. The treatments have different eligibility criteria, visit schedules and safety considerations.'],
+            ['Is Spravato the same as IV ketamine?', 'No. Spravato contains esketamine and is given as a nasal spray. IV ketamine is a different medication and administration route, with different approvals, monitoring requirements and coverage.'],
+            ['What side effects should I discuss?', 'Discuss sedation, dissociation, breathing problems, increased blood pressure, abuse and misuse risk, and other warnings with your provider. Review the Medication Guide before your visit.'],
+        ];
+
+        foreach (['spravato' => $spravato, 'home' => $home, 'tms' => $tms] as $group => $items) {
             foreach ($items as [$question, $answer]) {
                 $this->add('faqs', Faq::class, ['group' => $group, 'question' => $question, 'answer' => $answer, 'in_schema' => true]);
             }

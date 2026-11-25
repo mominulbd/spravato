@@ -11,7 +11,7 @@ use Uptms\Collections\Models\Faq;
 /** FAQs are grouped by the page that shows them: home, tms, conditions/<slug>. */
 final class FaqType extends CollectionType
 {
-    public const array BASE_GROUPS = ['home' => 'Home', 'tms' => 'TMS'];
+    public const array BASE_GROUPS = ['spravato' => 'Spravato', 'home' => 'Home', 'tms' => 'TMS'];
 
     public function key(): string
     {

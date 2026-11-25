@@ -51,7 +51,7 @@ it('scores live while typing without saving', function () {
     $before = DB::table('seo_meta')->get()->toArray();
     $response = asAdmin(staffUser('manager'))->postJson("/api/v1/admin/seo/page/{$this->home->id}/analyze", [
         'meta_title' => str_repeat('Very long title ', 8),
-        'focus_keyphrase' => 'deep tms',
+        'focus_keyphrase' => 'esketamine',
     ])->assertOk();
 
     $checks = collect($response->json('data.analysis.seo'))->keyBy('key');

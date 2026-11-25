@@ -74,6 +74,86 @@ final class BlockTypes
                 'insurers' => ($data['primary_opens_form'] ?? false) ? ['insurance', []] : null,
             ])),
 
+            // ── Spravato landing page (Figma "Spravato", desktop 1440) ──────────
+            new BlockType('landing_hero', 'Landing hero', 'layout-template', 'Navy panel: eyebrow, headline, two paragraphs, two buttons and a photo.', [
+                Field::text('eyebrow', 'Eyebrow', 80),
+                Field::headline('headline', 'Headline', 80),
+                Field::textarea('lead', 'Lead', 200),
+                Field::textarea('body', 'Body', 320, help: 'Plain language. Avoid promising results.'),
+                Field::link('primary', 'Main button'),
+                Field::link('secondary', 'Second button'),
+                Field::image('image', 'Photo'),
+            ]),
+
+            new BlockType('criteria', 'Criteria', 'list-checks', 'Sky panel: intro and button beside checklist cards and a note.', [
+                Field::rail(),
+                Field::anchor(),
+                Field::headline('headline'),
+                Field::textarea('intro', 'Intro', 320),
+                Field::link('primary', 'Button'),
+                Field::repeater('items', 'Cards', [Field::text('title', 'Title', 80, true), Field::textarea('body', 'Text', 240, true)], 6),
+                Field::textarea('note', 'Note under the cards', 240),
+            ]),
+
+            new BlockType('visit_steps', 'Visit steps', 'footprints', 'Numbered step cards, then a navy note with a photo and a button.', [
+                Field::rail(),
+                Field::anchor(),
+                Field::headline('headline'),
+                Field::textarea('intro', 'Intro', 240),
+                Field::repeater('steps', 'Steps', [Field::text('title', 'Title', 60, true), Field::textarea('body', 'Text', 240, true)], 6),
+                Field::text('note_eyebrow', 'Note eyebrow', 60)->in('Visit note'),
+                Field::textarea('note_body', 'Note text', 240)->in('Visit note'),
+                Field::textarea('note_caption', 'Photo credit', 200)->in('Visit note'),
+                Field::image('note_image', 'Photo')->in('Visit note'),
+                Field::link('note_cta', 'Button')->in('Visit note'),
+            ]),
+
+            new BlockType('schedule', 'Schedule', 'calendar', 'Navy panel: intro beside a card of schedule rows.', [
+                Field::rail(),
+                Field::anchor(),
+                Field::headline('headline'),
+                Field::textarea('lead', 'Lead', 320),
+                Field::textarea('body', 'Body', 320),
+                Field::repeater('rows', 'Rows', [Field::text('period', 'When', 40, true), Field::text('title', 'Title', 60, true), Field::text('body', 'Text', 160)], 6),
+                Field::textarea('note', 'Note under the rows', 240),
+            ]),
+
+            new BlockType('video_pair', 'Videos', 'play', 'Intro beside the headline, then video cards that load only when played.', [
+                Field::rail(),
+                Field::anchor(),
+                Field::headline('headline'),
+                Field::textarea('intro', 'Intro', 240),
+                Field::repeater('videos', 'Videos', [
+                    Field::text('title', 'Title', 80, true),
+                    Field::text('body', 'Text', 160),
+                    Field::image('poster', 'Cover image'),
+                    Field::text('url', 'Video address', 190, help: 'An official video page or file (https://…). Nothing loads until the visitor presses play. Empty shows the cover without a play button.'),
+                ], 4),
+            ]),
+
+            new BlockType('care_team', 'Care team cards', 'users', 'Photo cards for the people in Collections · Team shown on the Home page.', [
+                Field::rail(),
+                Field::anchor(),
+                Field::headline('headline'),
+                Field::textarea('intro', 'Intro', 240),
+                Field::link('founder_link', 'Founder card link'),
+                Field::link('member_link', 'Other cards link'),
+            ], fn (array $data): array => ['team' => ['team', ['page' => 'home']]]),
+
+            new BlockType('coverage_location', 'Coverage & location', 'map-pin', 'Insurance card beside the clinic card (address, phone and email from Clinic settings).', [
+                Field::rail(),
+                Field::anchor(),
+                Field::headline('headline'),
+                Field::text('coverage_eyebrow', 'Eyebrow', 60)->in('Coverage card'),
+                Field::text('coverage_title', 'Title', 80)->in('Coverage card'),
+                Field::textarea('coverage_body', 'Text', 400)->in('Coverage card'),
+                Field::list('coverage_items', 'Bullets', 5, 120)->in('Coverage card'),
+                Field::link('coverage_cta', 'Button')->in('Coverage card'),
+                Field::text('location_eyebrow', 'Eyebrow', 60)->in('Clinic card'),
+                Field::text('location_title', 'Title', 80)->in('Clinic card'),
+                Field::textarea('location_body', 'Text', 240)->in('Clinic card'),
+            ]),
+
             new BlockType('section_nav', 'Section navigation', 'list', 'Row of pills that jump to sections of the page.', [
                 Field::text('lead', 'Lead text', 60),
                 Field::source('menu', 'Menu', 'menus', 'Edit the links in Navigation menus.'),
@@ -213,6 +293,7 @@ final class BlockTypes
                 Field::text('aside_title', 'Card title', 80)->in('Side card'),
                 Field::textarea('aside_body', 'Card text', 200)->in('Side card'),
                 Field::link('aside_link', 'Card link')->in('Side card'),
+                Field::repeater('aside_links', 'More card links', [Field::text('label', 'Label', 80, true), Field::text('href', 'Link', 190, true)], 4)->in('Side card'),
                 Field::text('footnote', 'Footnote', 240),
                 Field::repeater('footnote_links', 'Footnote links', $linkRow, 4),
             ], fn (array $data): array => ['faqs' => ['faqs', ['group' => $data['group'] ?? 'home']]]),

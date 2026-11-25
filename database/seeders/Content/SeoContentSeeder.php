@@ -47,12 +47,12 @@ class SeoContentSeeder extends Seeder
 
         return [
             '/' => [
-                'meta_title' => 'Deep TMS Therapy in University Place, WA %sep% %site%',
-                'meta_description' => 'When depression won’t lift, explore Deep TMS with a psychiatric provider near Tacoma. Ask about insurance — your first phone consultation is free.',
-                'focus_keyphrase' => 'deep tms therapy',
-                'keyphrases' => ['tms therapy tacoma', 'treatment-resistant depression', 'brainsway deep tms'],
+                'meta_title' => 'Spravato® Treatment near Tacoma & University Place %sep% UPTMS',
+                'meta_description' => 'Explore Spravato® (esketamine) treatment in University Place near Tacoma. Learn about eligibility, supervised visits, insurance and consultation options at UPTMS.',
+                'focus_keyphrase' => 'spravato treatment tacoma',
+                'keyphrases' => ['esketamine nasal spray', 'treatment-resistant depression', 'spravato university place'],
                 'breadcrumb_title' => 'Home',
-                'citations' => [$nimh, $fda],
+                'citations' => [$nimh],
             ],
             '/tms' => [
                 'meta_title' => 'Deep TMS for Depression & OCD %sep% %site%',
