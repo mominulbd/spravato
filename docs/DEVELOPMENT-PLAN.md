@@ -1,6 +1,6 @@
 # Spravato — Development Plan
 
-Status: **Phase 0 in progress** (2026-11-25): done: `site/` (Next.js 16.4.6), one-origin dev routing, `/admin/login`, Spravato databases, posts/quiz/conditions removed, CI. Left: production proxy config, docs (ARCHITECTURE/SETUP), dead quiz/posts/conditions settings keys (SEO templates, sitemap switches, quiz disclaimer, consultation `quiz_results` display) · supersedes the two-repository layout in `ROADMAP.md` and `ARCHITECTURE.md` §1
+Status: **Phase 0 done** (2026-11-25): `site/` (Next.js 16.4.6) on one origin with Laravel, `/admin/login`, Spravato databases, posts/quiz/conditions removed, CI, deploy configs (`deploy/`), docs. **Next: Phase 1** · supersedes the two-repository layout in `ROADMAP.md` and `ARCHITECTURE.md` §1
 
 **Goal:** turn the static Spravato landing page (Figma file `Ok7lXCmg2hLZ8iurI1p85j`, page "Spravato"; the static HTML prototype was removed from the repo on 2026-11-25) into a CMS-driven page, served by a **Next.js front end that lives inside this Laravel project**, with the consultation modal feeding the existing encrypted inbox. Staff sign in at **`/admin/login`**.
 
@@ -66,13 +66,13 @@ Phase 4  Hardening & launch ──── QA, a11y, performance, security, deploy
 
 | Area | Deliverables |
 | --- | --- |
-| Repo | `git init`; create `site/` with `create-next-app` (Next.js 16, App Router, Cache Components, Tailwind 4). Where a piece of `../uptms-app` fits (API client, revalidate route, block renderer), write the equivalent in `site/`; never edit or move files in `uptms-app`. Root `package.json` gets npm workspaces or `site:*` scripts; one `.env.example` section for the site |
-| Routing | `routes/web.php`: drop `Route::redirect('/', '/admin')`; keep the admin catch-all; `/login` → `/admin/login`. `site/next.config.mjs` dev rewrites for D2 paths. Proxy config in `deploy/` (nginx + Apache variants) |
-| Admin login | Confirm `RequireAuth` / `SessionEndedScreen` / password-reset and invitation links all land on `/admin/login`; reset and invitation emails build URLs with `/admin/...`; test both |
+| Repo | ✅ `git init`; create `site/` with `create-next-app` (Next.js 16, App Router, Cache Components, Tailwind 4). Where a piece of `../uptms-app` fits (API client, revalidate route, block renderer), write the equivalent in `site/`; never edit or move files in `uptms-app`. Root `package.json` gets npm workspaces or `site:*` scripts; one `.env.example` section for the site |
+| Routing | ✅ `routes/web.php`: drop `Route::redirect('/', '/admin')`; keep the admin catch-all; `/login` → `/admin/login`. `site/next.config.mjs` dev rewrites for D2 paths. Proxy config in `deploy/` (nginx + Apache variants) |
+| Admin login | ✅ Confirm `RequireAuth` / `SessionEndedScreen` / password-reset and invitation links all land on `/admin/login`; reset and invitation emails build URLs with `/admin/...`; test both |
 | Scope cut | ✅ Remove `uptms.posts`, `uptms.quiz`, `uptms.conditions` from `config/packages.php`; delete `features/{posts,quiz,conditions}`, their routes, nav items, block sources and site components; drop their tables in a migration; update `ArchitectureTest` |
-| Rebrand | `APP_NAME`, DB names `spravato`, `spravato_test`, `spravato_e2e`; README, AGENTS.md, ARCHITECTURE.md §1/§6, SETUP.md rewritten for one repo |
+| Rebrand | ✅ `APP_NAME`, DB names `spravato`, `spravato_test`, `spravato_e2e`; README, AGENTS.md, ARCHITECTURE.md §1/§6, SETUP.md rewritten for one repo |
 | Tokens | ✅ `resources/css/tokens.css` is the only copy; `site/app/globals.css` imports it (`turbopack.root` = the Laravel root) |
-| CI | One workflow: Pint + PHPStan + Pest, admin lint/types/Vitest, site lint/types/Vitest, Playwright |
+| CI | ✅ One workflow: Pint + PHPStan + Pest, admin lint/types/Vitest, site lint/types/Vitest, Playwright |
 
 **Done when:** `composer dev` → `localhost:3000` shows the site shell, `localhost:3000/admin/login` signs in, `/admin/posts` is a 404, all checks are green.
 
@@ -113,6 +113,7 @@ The prototype's consultation modal has fields the current form doesn't. Extend `
 | --- | --- |
 | Backend | New fields: `preferred_contact` (phone/email/either), `patient_status` (new/existing/not sure), `insurance_provider` (**encrypted**, optional), `emergency_acknowledged` (required true); `best_time` values Morning / Afternoon / Early evening / No preference; topics seeded from the modal list; `cta_id` stored as the request's source label. Migration, Form Request, enums, search index unchanged |
 | Admin | Request detail (Figma 05) shows the new fields; inbox filter by topic; CSV export columns added (insurance stays out unless `consultations.export`) |
+| Privacy | The form is a pop-up on `/`, not a `/contact` page, so the Tag Manager exclusion (`SeoSettings::SENSITIVE_PATHS`, ARCHITECTURE.md §9) no longer protects it: keep tags off `/` entirely while the dialog exists there, or load no tag inside the dialog and never forward its fields |
 | Site | `ConsultationDialog` client island: opens from any `data-topic` button with that topic preselected; focus trap, Esc, return focus; client + server validation; submitting / success (reference number) / error / rate-limited states; Turnstile; message field keeps the "don't include health details" hint |
 | Tests | Pest: new fields validated + encrypted at rest, acknowledgement required, topic must be a known one; Vitest: dialog a11y + validation; Playwright: open modal from hero → submit → appears in `/admin/consultations` → mark contacted |
 

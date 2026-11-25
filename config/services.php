@@ -35,7 +35,7 @@ return [
         ],
     ],
 
-    // The public Next.js site (uptms-app): canonical base URL, the shared
+    // The public Next.js site (site/): canonical base URL, the shared
     // secret for the on-publish revalidation webhook (docs/ARCHITECTURE.md §6)
     // and the token that lets the site forward a visitor's IP with a form
     // post (App\Support\Http\SiteClient).

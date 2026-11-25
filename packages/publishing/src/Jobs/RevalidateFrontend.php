@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 use JsonException;
 
 /**
- * Tells the website (uptms-app `/api/revalidate`) which cache tags changed.
+ * Tells the website (site/ `/api/revalidate`) which cache tags changed.
  * The body is signed with HMAC-SHA256 over `{timestamp}.{body}` using
  * FRONTEND_REVALIDATE_SECRET, so nobody else can flush the site's cache.
  * Without a secret (local set-ups) the call is skipped; pages then refresh

@@ -29,7 +29,7 @@ use Symfony\Component\Finder\Finder;
  *   src/Console/Commands/ → registered as artisan commands
  *
  * The `public` and `admin` middleware groups are defined in bootstrap/app.php.
- * `public` is read by the Next.js site (uptms-app); `admin` by the admin SPA.
+ * `public` is read by the Next.js site (site/); `admin` by the admin SPA.
  */
 abstract class ModuleServiceProvider extends ServiceProvider
 {

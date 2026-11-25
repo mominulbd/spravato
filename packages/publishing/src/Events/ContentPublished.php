@@ -8,7 +8,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 
 /**
  * Something the website shows changed. Listeners clear the public read
- * cache and ask the website to revalidate `tags` (uptms-app `cacheTag`s).
+ * cache and ask the website to revalidate `tags` (site/ `cacheTag`s).
  */
 final class ContentPublished
 {

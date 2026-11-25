@@ -9,7 +9,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * The block library: every section the website's design has, so a page
  * built in the admin can only use layouts the site knows how to render.
- * Adding a block = a definition here + a component in uptms-app
+ * Adding a block = a definition here + a component in site/
  * (components/blocks).
  */
 final class BlockTypes
