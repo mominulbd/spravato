@@ -10,8 +10,12 @@ it('serves the admin SPA shell for any admin path', function (string $path): voi
         ->assertSee('<div id="app"></div>', false);
 })->with(['/admin', '/admin/login', '/admin/pages/home/seo']);
 
-it('leaves the site root to the Next.js site', function (): void {
-    $this->get('/')->assertNotFound();
+it('sends guests at the root to the admin sign-in page', function (): void {
+    $this->get('/')->assertRedirect('/admin/login')->assertStatus(302);
+});
+
+it('sends signed-in staff at the root to the admin dashboard', function (): void {
+    $this->actingAs(staffUser())->get('/')->assertRedirect('/admin')->assertStatus(302);
 });
 
 it('sends /login to the admin sign-in page', function (): void {

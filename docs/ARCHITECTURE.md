@@ -16,7 +16,7 @@ One repository, one domain:
 | root | REST API, admin SPA at `/admin`, database, jobs | Laravel 13 · PHP 8.4 · MySQL · Sanctum · React 19 + Vite + Tailwind 4 |
 | `../spravato-app` (own repository) | Public Spravato landing page | Next.js 16 App Router · Cache Components · Tailwind 4 |
 
-Laravel answers `/admin`, `/api/v1`, `/sanctum`, `/build`, `/storage`, `/up` and `/login` (a 301 to `/admin/login`); Next.js answers everything else. In development `site/next.config.mjs` rewrites those paths to Laravel; in production nginx or Apache splits them (`deploy/`). The admin follows the module and SPA conventions of `~/Sites/decent-pos`, talks to Laravel only through `/api/v1`, and Blade renders an empty shell with no domain data. `../uptms-app` is a separate project and is not used here.
+Laravel answers `/admin`, `/api/v1`, `/sanctum`, `/build`, `/storage`, `/up` and `/login` (a 301 to `/admin/login`); Next.js answers everything else. Where Laravel owns the whole domain (the Hostinger layout), `/` itself redirects: guests to `/admin/login`, signed-in staff to `/admin`. In development `site/next.config.mjs` rewrites those paths to Laravel; in production nginx or Apache splits them (`deploy/`). The admin follows the module and SPA conventions of `~/Sites/decent-pos`, talks to Laravel only through `/api/v1`, and Blade renders an empty shell with no domain data. `../uptms-app` is a separate project and is not used here.
 
 ## 2. System overview
 
