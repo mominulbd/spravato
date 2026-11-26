@@ -329,7 +329,17 @@ Without `HOSTINGER_PUBLIC_PATH` the project root is assumed to be the document r
 5. hPanel → Cron Jobs, both every minute, with the PHP binary the deploy log printed:
    - `cd <deploy path> && /opt/alt/php84/usr/bin/php artisan schedule:run`
    - `cd <deploy path> && /opt/alt/php84/usr/bin/php artisan queue:work --stop-when-empty --max-time=55`
-6. The site's environment on its Node host (from `site/.env.example`), then build and start it (`npm ci && npm run build`, start command `node .next/standalone/site/server.js` with `PORT` from the host):
+6. The site. On Hostinger: hPanel → Websites → Add website → **Node.js app** on `<domain>`, connected to this GitHub repository, branch `main`:
+
+   | Setting | Value |
+   | --- | --- |
+   | Framework | Next.js |
+   | Root directory | `site` (the whole repository is cloned: `site/app/globals.css` imports `../resources/css/tokens.css`) |
+   | Node version | 24 (22 at the least) |
+   | Install / build | `npm ci` / `npm run build` |
+   | Start | `npm start` (listens on the `PORT` Hostinger assigns) |
+
+   If `<domain>` already exists as a PHP website (the Laravel deploy started there), back up its `.env` — `APP_KEY` decrypts every consultation request — and move Laravel to the admin subdomain *before* removing that website. Environment variables for the app (from `site/.env.example`):
    ```sh
    API_URL=https://admin.<domain>/api/v1
    NEXT_PUBLIC_SITE_URL=https://<domain>

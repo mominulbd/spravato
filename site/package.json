@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p ${SITE_PORT:-3000}",
     "build": "next build",
-    "start": "next start -p ${SITE_PORT:-3000}",
+    "start": "next start -p ${PORT:-${SITE_PORT:-3000}}",
     "lint": "eslint",
     "types": "next typegen && tsc --noEmit",
     "test": "vitest run",
