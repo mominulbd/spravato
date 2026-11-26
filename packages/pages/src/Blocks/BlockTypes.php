@@ -293,7 +293,7 @@ final class BlockTypes
                 Field::text('aside_title', 'Card title', 80)->in('Side card'),
                 Field::textarea('aside_body', 'Card text', 200)->in('Side card'),
                 Field::link('aside_link', 'Card link')->in('Side card'),
-                Field::repeater('aside_links', 'More card links', [Field::text('label', 'Label', 80, true), Field::text('href', 'Link', 190, true)], 4)->in('Side card'),
+                Field::repeater('aside_links', 'More card links', [Field::text('label', 'Label', 80, true), Field::text('href', 'Link', 190, help: 'Leave empty when a document is chosen.'), Field::document('media_id', 'Or a document')], 4)->in('Side card'),
                 Field::text('footnote', 'Footnote', 240),
                 Field::repeater('footnote_links', 'Footnote links', $linkRow, 4),
             ], fn (array $data): array => ['faqs' => ['faqs', ['group' => $data['group'] ?? 'home']]]),

@@ -63,6 +63,10 @@ final readonly class StoreUploadedFile
         }
 
         if (isset(self::DOCUMENTS[$mime])) {
+            if (! $this->startsAsPdf((string) $file->getRealPath())) {
+                throw ValidationException::withMessages(['file' => 'This file is not a valid PDF.']);
+            }
+
             $path = $this->storage->originalPath($uuid, $filename, self::DOCUMENTS[$mime]);
 
             if ($this->storage->disk($disk)->putFileAs(dirname($path), $file, basename($path), ['visibility' => 'public']) === false) {
@@ -82,5 +86,25 @@ final readonly class StoreUploadedFile
         }
 
         throw ValidationException::withMessages(['file' => 'Upload a JPG, PNG, WebP or PDF file.']);
+    }
+
+    /**
+     * finfo calls a file a PDF when `%PDF-` appears anywhere near the start,
+     * so text with a PDF header tucked behind it passes. A real PDF opens
+     * with the header (PDF 32000-1 §7.5.2); a file that does not is refused
+     * before it can be served from /storage as application/pdf.
+     */
+    private function startsAsPdf(string $path): bool
+    {
+        $handle = @fopen($path, 'rb');
+
+        if ($handle === false) {
+            return false;
+        }
+
+        $head = (string) fread($handle, 8);
+        fclose($handle);
+
+        return str_starts_with($head, '%PDF-');
     }
 }

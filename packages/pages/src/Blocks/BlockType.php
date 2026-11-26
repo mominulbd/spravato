@@ -46,7 +46,7 @@ final readonly class BlockType
                 'link' => ['label' => '', 'href' => ''],
                 'toggle' => (bool) $field->default,
                 'select' => $field->default,
-                'image' => null,
+                'image', 'document' => null,
                 default => '',
             };
         }

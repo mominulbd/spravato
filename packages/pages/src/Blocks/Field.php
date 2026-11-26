@@ -11,8 +11,11 @@ namespace Uptms\Pages\Blocks;
  *
  * Types: text, headline (*asterisks* mark the accent words), textarea,
  * markdown (paragraphs, **bold**, *italic*, [links](/path)), link
- * {label, href}, image (media id), list (strings), repeater (rows of
- * fields), select, toggle, source (a choice offered by a block source).
+ * {label, href, media_id?} (media_id: a PDF from the library, whose
+ * current address replaces href when served), image (media id), document
+ * (PDF media id; in a repeater row it supplies the row's href), list
+ * (strings), repeater (rows of fields), select, toggle, source (a choice
+ * offered by a block source).
  */
 final readonly class Field
 {
@@ -63,6 +66,12 @@ final readonly class Field
     public static function image(string $name, string $label = 'Image'): self
     {
         return new self($name, 'image', $label, help: 'Only images with alt text can be placed.');
+    }
+
+    /** A PDF from the media library. In a repeater row beside `href`, it fills that href when served. */
+    public static function document(string $name, string $label = 'Document', ?string $help = null): self
+    {
+        return new self($name, 'document', $label, help: $help ?? 'An official PDF from the media library. The link follows the file when it is replaced.');
     }
 
     public static function list(string $name, string $label, int $maxItems = 8, int $max = 200): self

@@ -1,5 +1,6 @@
 /** Uptms\Menus\Services\MenuTree payloads. */
-export type MenuItemType = 'page' | 'anchor' | 'link';
+/** `document`: a PDF from the media library, linked by id so a replaced file keeps working. */
+export type MenuItemType = 'page' | 'anchor' | 'link' | 'document';
 
 export interface MenuSummary {
     key: string;
@@ -17,6 +18,9 @@ export interface MenuItemData {
     page_published: boolean | null;
     anchor: string | null;
     url: string | null;
+    media_id?: number | null;
+    /** Null when the document is trashed or gone (the website skips the item). */
+    document_filename?: string | null;
     href: string | null;
     is_visible: boolean;
     /** Only top-level items carry children (one level deep). */
@@ -46,6 +50,11 @@ export interface EditItem {
     page_title: string | null;
     anchor: string;
     url: string;
+    media_id: number | null;
+    /** File name of the linked document, for display (null when it is gone). */
+    document_name: string | null;
+    /** Current address of the document, for display. */
+    document_href: string | null;
     is_visible: boolean;
     children: EditItem[];
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accentSegments, fillHref, inlineMarkdown, paragraphs, resolveLink } from "./text";
+import { accentSegments, fillHref, inlineMarkdown, isPdf, linkProps, paragraphs, resolveLink } from "./text";
 import type { Settings } from "./types";
 
 const settings = {
@@ -33,5 +33,20 @@ describe("text helpers", () => {
 
   it("splits paragraphs on blank lines", () => {
     expect(paragraphs("One.\n\nTwo.\n")).toEqual(["One.", "Two."]);
+  });
+});
+
+describe("linkProps", () => {
+  it("opens official PDFs in a new tab as application/pdf", () => {
+    for (const href of ["/storage/media/a/1-spravato-medication-guide.pdf", "/storage/x.PDF?v=2", "https://cdn.example/x.pdf#page=2"]) {
+      expect(isPdf(href)).toBe(true);
+      expect(linkProps(href)).toEqual({ type: "application/pdf", target: "_blank", rel: "noopener" });
+    }
+  });
+
+  it("keeps other links as before", () => {
+    expect(isPdf("/#consultation")).toBe(false);
+    expect(linkProps("https://example.com/pdf-guide")).toEqual({ target: "_blank", rel: "noopener noreferrer" });
+    expect(linkProps("/#faq")).toEqual({});
   });
 });

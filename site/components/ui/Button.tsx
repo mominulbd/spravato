@@ -1,5 +1,5 @@
 import type { Link } from "@/lib/types";
-import { isExternal } from "@/lib/text";
+import { isPdf, linkProps } from "@/lib/text";
 
 /** The Figma "Button" component: Primary, Secondary, Light and OutlineLight pills. */
 export type ButtonVariant = "primary" | "secondary" | "light" | "outline-light";
@@ -14,15 +14,14 @@ const VARIANTS: Record<ButtonVariant, string> = {
 export function ButtonLink({ link, variant = "primary", className = "" }: { link: Link | null; variant?: ButtonVariant; className?: string }) {
   if (!link) return null;
 
-  const external = isExternal(link.href);
-
   return (
     <a
       href={link.href}
       className={`inline-flex items-center justify-center rounded-full px-7 py-[17px] text-center font-display text-base leading-[1.2] font-bold transition-colors ${VARIANTS[variant]} ${className}`}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      {...linkProps(link.href)}
     >
       {link.label}
+      {isPdf(link.href) && <span className="sr-only"> (PDF, opens in a new tab)</span>}
     </a>
   );
 }
@@ -31,15 +30,14 @@ export function ButtonLink({ link, variant = "primary", className = "" }: { link
 export function TextLink({ link, tone = "royal", className = "" }: { link: Link | null; tone?: "royal" | "white"; className?: string }) {
   if (!link) return null;
 
-  const external = isExternal(link.href);
-
   return (
     <a
       href={link.href}
       className={`font-display text-base leading-[1.3] font-bold underline-offset-4 hover:underline ${tone === "royal" ? "text-royal" : "text-white"} ${className}`}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      {...linkProps(link.href)}
     >
       {link.label}
+      {isPdf(link.href) && <span className="sr-only"> (PDF, opens in a new tab)</span>}
     </a>
   );
 }

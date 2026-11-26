@@ -18,8 +18,8 @@ use Uptms\Seo\Domain\SeoSubject;
 
 /**
  * Describes a page to the SEO module: its text, headings, links and images
- * read from the blocks, and the FAQs, clinicians and conditions its blocks
- * show (for the JSON-LD graph).
+ * read from the blocks, and the FAQs and clinicians its blocks show (for
+ * the JSON-LD graph). FAQs marked "leave out of schema" still count as text.
  */
 final readonly class PageSeoSource implements SeoSource
 {
@@ -93,7 +93,6 @@ final readonly class PageSeoSource implements SeoSource
         $mediaIds = [];
         $faqs = [];
         $people = [];
-        $therapies = [];
         $firstParagraph = '';
         $h1Seen = false;
 
@@ -118,7 +117,9 @@ final readonly class PageSeoSource implements SeoSource
                     }
 
                     if ($source === 'faqs' && isset($item['question'], $item['answer'])) {
-                        $faqs[] = ['question' => (string) $item['question'], 'answer' => (string) $item['answer']];
+                        if (($item['in_schema'] ?? true) !== false) {
+                            $faqs[] = ['question' => (string) $item['question'], 'answer' => (string) $item['answer']];
+                        }
                         $text[] = $item['question']."\n".$item['answer'];
                     } elseif ($source === 'team' && isset($item['name'])) {
                         $people[$item['name']] = [
@@ -126,11 +127,8 @@ final readonly class PageSeoSource implements SeoSource
                             'credentials' => is_string($item['credentials'] ?? null) ? $item['credentials'] : null,
                             'role' => is_string($item['role_title'] ?? null) ? $item['role_title'] : null,
                             'image' => is_array($item['photo'] ?? null) ? ($item['photo']['url'] ?? null) : null,
-                            'founder' => (bool) ($item['is_founder'] ?? false),
+                            'schema_type' => ($item['schema_type'] ?? null) === 'Physician' ? 'Physician' : 'Person',
                         ];
-                    } elseif ($source === 'conditions' && isset($item['title'])) {
-                        $therapies[$item['title']] = ['name' => (string) $item['title'], 'description' => (string) ($item['summary'] ?? '')];
-                        $links[] = (string) ($item['path'] ?? '');
                     }
                 }
             }
@@ -170,7 +168,6 @@ final readonly class PageSeoSource implements SeoSource
             },
             faqs: $faqs,
             people: array_values($people),
-            therapies: array_values($therapies),
             breadcrumbs: $this->parents($page),
             sitemapPriority: $page->is_home ? 1.0 : 0.8,
         );

@@ -13,6 +13,7 @@ use Uptms\Media\Models\MediaVariant;
  * get this back, so no module reads the media tables directly.
  *
  * @phpstan-type PublicImage array{id: int, url: string, width: int|null, height: int|null, alt: string, focal: array{x: float, y: float}, sources: array<string, list<array{width: int, url: string}>>}
+ * @phpstan-type PublicDocument array{id: int, url: string, mime: string, size: int, filename: string}
  */
 class MediaPresenter
 {
@@ -46,6 +47,30 @@ class MediaPresenter
         return Media::query()->with('variants')->whereIn('id', $ids)->get()
             ->mapWithKeys(fn (Media $media): array => [$media->id => $this->toArray($media)])
             ->all();
+    }
+
+    /**
+     * A document (PDF) for a site link: its public /storage address, type
+     * and size, so the link can say "PDF, 1.2 MB" and carry type="…".
+     * Images and trashed files give null.
+     *
+     * @return PublicDocument|null
+     */
+    public function presentDocument(?int $id): ?array
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        $media = Media::query()->whereKey($id)->where('kind', Media::DOCUMENT)->first();
+
+        return $media instanceof Media ? [
+            'id' => $media->id,
+            'url' => $media->url(),
+            'mime' => $media->mime,
+            'size' => $media->size,
+            'filename' => $media->filename,
+        ] : null;
     }
 
     /**

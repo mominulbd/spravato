@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Database\Seeders\SiteContentSeeder;
 use Illuminate\Support\Facades\Storage;
+use Uptms\Media\Models\Media;
 use Uptms\Menus\Models\Menu;
 use Uptms\Menus\Services\MenuTree;
 use Uptms\Pages\Models\Page;
@@ -72,5 +73,12 @@ it('links the official SPRAVATO® documents once their PDFs are supplied', funct
 
     $blocks = collect($this->getJson('/api/v1/public/page?path=%2F')->json('data.blocks'));
     expect($blocks->firstWhere('type', 'faq')['data']['aside_links'])->toEqual([['label' => 'Medication Guide →', 'href' => $documents[0]['href']]])
-        ->and($blocks->firstWhere('type', 'media_text')['data']['link']['href'])->toBe($documents[0]['href']);
+        ->and($blocks->firstWhere('type', 'media_text')['data']['link']['href'])->toBe($documents[0]['href'])
+        // Stored by media id (so a replaced PDF keeps working); served as {label, href} only.
+        ->and(array_keys($blocks->firstWhere('type', 'faq')['data']['aside_links'][0]))->toEqualCanonicalizing(['label', 'href'])
+        ->and(array_keys($blocks->firstWhere('type', 'media_text')['data']['link']))->toEqualCanonicalizing(['label', 'href']);
+
+    $guide = Media::query()->where('original_name', 'spravato-medication-guide.pdf')->value('id');
+    $faq = Page::query()->where('path', '/')->firstOrFail()->blocks()->where('type', 'faq')->first();
+    expect($faq?->data['aside_links'][0])->toEqual(['label' => 'Medication Guide →', 'href' => '', 'media_id' => $guide]);
 });

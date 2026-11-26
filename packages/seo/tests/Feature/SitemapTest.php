@@ -7,10 +7,13 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Uptms\Pages\Models\Page;
+use Uptms\Seo\Models\SeoMeta;
 use Uptms\Seo\Models\SeoSetting;
 
 beforeEach(function () {
     $this->seed(SiteContentSeeder::class);
+    // The seeded TMS, Contact and Privacy pages start out of search; these tests need several indexable URLs.
+    SeoMeta::query()->update(['robots_index' => true, 'in_sitemap' => true]);
 });
 
 it('lists every indexable published address with images and dates', function () {

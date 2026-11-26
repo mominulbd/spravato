@@ -1,18 +1,22 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { FileText, Plus } from 'lucide-react';
 import { Button, Checkbox, SearchInput, Skeleton, TextInput, cn } from '@shared/ui';
-import { linkItem, pageItem } from './menuTree';
+import { MediaPicker } from '@admin/features/media/MediaPicker';
+import type { MediaItem } from '@admin/features/media/types';
+import { documentItem, linkItem, pageItem } from './menuTree';
 import type { EditItem, PageOption } from './types';
 
-type Tab = 'pages' | 'posts' | 'link';
+type Tab = 'pages' | 'document' | 'link';
 
-/** Right column of Figma 17: add pages (checklist) or a custom link. */
+/** Right column of Figma 17: add pages (checklist), an official document (PDF) or a custom link. */
 export function AddItemsPanel({ pages, loading, disabled, onAdd }: { pages: PageOption[]; loading: boolean; disabled: boolean; onAdd: (items: EditItem[]) => void }) {
     const [tab, setTab] = useState<Tab>('pages');
     const [search, setSearch] = useState('');
     const [checked, setChecked] = useState<number[]>([]);
     const [label, setLabel] = useState('');
     const [url, setUrl] = useState('');
+    const [document, setDocument] = useState<MediaItem | null>(null);
+    const [picking, setPicking] = useState(false);
     const term = search.trim().toLowerCase();
     const shown = term === '' ? pages : pages.filter((page) => `${page.title} ${page.path}`.toLowerCase().includes(term));
     const urlValid = /^(\/(?!\/)|#|https:\/\/|tel:|mailto:)/.test(url.trim());
@@ -24,7 +28,7 @@ export function AddItemsPanel({ pages, loading, disabled, onAdd }: { pages: Page
                 {(
                     [
                         ['pages', 'Pages'],
-                        ['posts', 'Posts'],
+                        ['document', 'Document'],
                         ['link', 'Link'],
                     ] as const
                 ).map(([value, text]) => (
@@ -33,8 +37,6 @@ export function AddItemsPanel({ pages, loading, disabled, onAdd }: { pages: Page
                         type="button"
                         role="tab"
                         aria-selected={tab === value}
-                        disabled={value === 'posts'}
-                        title={value === 'posts' ? 'Posts arrive in Phase 4' : undefined}
                         onClick={() => setTab(value)}
                         className={cn(
                             'rounded-full py-1.5 text-admin-body font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
@@ -76,6 +78,42 @@ export function AddItemsPanel({ pages, loading, disabled, onAdd }: { pages: Page
                         {checked.length === 0 ? 'Add to menu' : `Add ${checked.length} to menu`}
                     </Button>
                 </>
+            ) : tab === 'document' ? (
+                <form
+                    className="flex flex-col gap-4"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        if (!document) return;
+                        onAdd([documentItem(label.trim(), document)]);
+                        setLabel('');
+                        setDocument(null);
+                    }}
+                >
+                    <TextInput label="Label" maxLength={80} value={label} disabled={disabled} onChange={(event) => setLabel(event.target.value)} />
+                    <div className="flex items-center gap-3 rounded-card border border-line bg-white p-3">
+                        <FileText className="size-5 shrink-0 text-royal" aria-hidden="true" />
+                        <p className="min-w-0 flex-1 truncate text-admin-body text-ink">{document?.filename ?? 'No document chosen.'}</p>
+                        <Button size="sm" variant="secondary" disabled={disabled} onClick={() => setPicking(true)}>
+                            {document ? 'Change' : 'Choose'}
+                        </Button>
+                    </div>
+                    <p className="text-admin-small text-ink-soft">Links to the file in the media library, so replacing the PDF keeps the link working.</p>
+                    <Button type="submit" variant="navy" icon={<Plus className="size-4" />} disabled={disabled || label.trim() === '' || document === null}>
+                        Add document to menu
+                    </Button>
+                    {picking && (
+                        <MediaPicker
+                            open
+                            kind="document"
+                            title="Choose a document"
+                            onClose={() => setPicking(false)}
+                            onSelect={(picked) => {
+                                setDocument(picked);
+                                if (label.trim() === '') setLabel(picked.filename.replace(/\.pdf$/i, ''));
+                            }}
+                        />
+                    )}
+                </form>
             ) : (
                 <form
                     className="flex flex-col gap-4"

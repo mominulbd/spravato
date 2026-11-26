@@ -11,9 +11,11 @@ use Uptms\Seo\Services\SeoSources;
 use Uptms\Seo\Services\SeoWorkspace;
 
 /**
- * Search titles, descriptions and keyphrases for the four designed pages
- * and the privacy policy. The home page copy is Figma 08's; the others
- * follow the same pattern.
+ * Search titles, descriptions and keyphrases for the seeded pages. The
+ * Spravato page at / is the only page the website renders (DEVELOPMENT-PLAN.md,
+ * Phase 3): its share image is the hero photo and its schema adds the
+ * SPRAVATO® Drug node. The UPTMS TMS, Contact and Privacy pages stay out of
+ * search and the sitemap until the website shows them.
  * Fills only pages without SEO yet, then scores them.
  */
 class SeoContentSeeder extends Seeder
@@ -44,6 +46,8 @@ class SeoContentSeeder extends Seeder
     {
         $nimh = ['label' => 'National Institute of Mental Health — Depression', 'url' => 'https://www.nimh.nih.gov/health/topics/depression'];
         $fda = ['label' => 'FDA — BrainsWay Deep TMS for OCD (510(k))', 'url' => 'https://www.accessdata.fda.gov/cdrh_docs/pdf17/DEN170078.pdf'];
+        $hidden = ['robots_index' => false, 'in_sitemap' => false];
+        $hero = SiteMediaSeeder::id('spravato-nasal-spray-use.jpg');
 
         return [
             '/' => [
@@ -53,6 +57,22 @@ class SeoContentSeeder extends Seeder
                 'keyphrases' => ['esketamine nasal spray', 'treatment-resistant depression', 'spravato university place'],
                 'breadcrumb_title' => 'Home',
                 'citations' => [$nimh],
+                'og_image_id' => $hero !== 0 ? $hero : null,
+                'schema_type' => 'MedicalWebPage',
+                'schema_about' => 'Treatment-resistant depression',
+                // Facts from the SPRAVATO® label only; no claims about outcomes.
+                'schema_custom' => [[
+                    '@type' => 'Drug',
+                    'name' => 'SPRAVATO®',
+                    'proprietaryName' => 'Spravato',
+                    'nonProprietaryName' => 'esketamine',
+                    'activeIngredient' => 'esketamine',
+                    'dosageForm' => 'Nasal spray',
+                    'administrationRoute' => 'Nasal',
+                    'prescriptionStatus' => 'https://schema.org/PrescriptionOnly',
+                    'isProprietary' => true,
+                    'isAvailableGenerically' => false,
+                ]],
             ],
             '/tms' => [
                 'meta_title' => 'Deep TMS for Depression & OCD %sep% %site%',
@@ -60,17 +80,20 @@ class SeoContentSeeder extends Seeder
                 'focus_keyphrase' => 'deep tms',
                 'keyphrases' => ['brainsway h7 coil', 'tms for ocd'],
                 'citations' => [$nimh, $fda],
+                ...$hidden,
             ],
             '/contact' => [
                 'meta_title' => 'Contact University Place TMS Clinic %sep% Free Phone Consultation',
                 'meta_description' => 'Call or request a free phone consultation with University Place TMS Clinic. Office hours Mon–Fri, 8 AM–5 PM, at 4007 Bridgeport Way W, Suite B.',
                 'focus_keyphrase' => 'tms clinic university place',
+                ...$hidden,
             ],
             '/privacy' => [
                 'meta_title' => 'Privacy Policy %sep% %site%',
                 'meta_description' => 'What the University Place TMS Clinic website collects when you request a consultation or take the self-check, how it is protected and kept, and the choices you have.',
                 'focus_keyphrase' => 'privacy policy',
                 'breadcrumb_title' => 'Privacy',
+                ...$hidden,
             ],
         ];
     }

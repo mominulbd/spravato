@@ -7,8 +7,7 @@ namespace Uptms\Seo\Domain;
 use Illuminate\Support\Carbon;
 
 /**
- * What a content module tells the SEO module about one page, post or
- * condition: its address, its text (for the checklist), its images and
+ * What a content module tells the SEO module about one page: its address, its text (for the checklist), its images and
  * links, and the facts the JSON-LD graph is built from. Plain data, so the
  * SEO module never reads another module's tables.
  */
@@ -20,8 +19,7 @@ final readonly class SeoSubject
      * @param  list<string>  $links  hrefs as written
      * @param  array<string, string>  $templateVars  extra title-template variables, e.g. ['category' => 'Guides']
      * @param  list<array{question: string, answer: string}>  $faqs
-     * @param  list<array{name: string, credentials: string|null, role: string|null, image: string|null, founder: bool}>  $people
-     * @param  list<array{name: string, description: string}>  $therapies
+     * @param  list<array{name: string, credentials: string|null, role: string|null, image: string|null, schema_type: 'Person'|'Physician'}>  $people
      * @param  array{author: string|null, author_credentials: string|null, section: string|null, reviewer: string|null, reviewed_at: string|null}|null  $article
      * @param  list<array{name: string, path: string}>  $breadcrumbs  parents only; the subject itself is added last
      * @param  array{name: string|null, date: string|null}|null  $review  clinical review recorded by the content module
@@ -49,7 +47,6 @@ final readonly class SeoSubject
         public string $defaultSchemaType = 'WebPage',
         public array $faqs = [],
         public array $people = [],
-        public array $therapies = [],
         public ?array $article = null,
         public array $breadcrumbs = [],
         public float $sitemapPriority = 0.6,

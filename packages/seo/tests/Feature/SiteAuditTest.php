@@ -8,9 +8,12 @@ use Illuminate\Support\Facades\Http;
 use Uptms\AuditLog\Models\AuditLog;
 use Uptms\Pages\Models\Page;
 use Uptms\Seo\Models\SeoAudit;
+use Uptms\Seo\Models\SeoMeta;
 
 beforeEach(function () {
     $this->seed(SiteContentSeeder::class);
+    // The seeded TMS, Contact and Privacy pages start out of search; these tests need several indexable URLs.
+    SeoMeta::query()->update(['robots_index' => true, 'in_sitemap' => true]);
     $this->admin = asAdmin(staffUser('admin'));
 });
 

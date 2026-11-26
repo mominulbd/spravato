@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Uptms\Pages\Blocks;
 
+use Closure;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Uptms\Media\Rules\PlaceableMedia;
@@ -99,12 +100,17 @@ final readonly class BlockValidator
 
                     break;
                 case 'link':
-                    $rules[$key] = ['nullable', 'array'];
+                    // A label needs somewhere to go: an address, or a document (media_id).
+                    $rules[$key] = ['nullable', 'array', $this->needsTarget('href', 'label', 'The link needs an address or a document.')];
                     $rules[$key.'.label'] = ['nullable', 'string', 'max:80'];
-                    $rules[$key.'.href'] = ['nullable', 'required_with:'.$key.'.label', 'string', 'max:190', 'regex:'.self::SAFE_HREF];
+                    $rules[$key.'.href'] = ['nullable', 'string', 'max:190', 'regex:'.self::SAFE_HREF];
+                    $rules[$key.'.media_id'] = ['nullable', 'integer', new PlaceableMedia('document')];
                     break;
                 case 'image':
                     $rules[$key] = ['nullable', 'integer', new PlaceableMedia];
+                    break;
+                case 'document':
+                    $rules[$key] = ['nullable', 'integer', new PlaceableMedia('document')];
                     break;
                 case 'list':
                     $rules[$key] = ['nullable', 'array', 'max:'.($field->maxItems ?? 10)];
@@ -113,6 +119,13 @@ final readonly class BlockValidator
                 case 'repeater':
                     $rules[$key] = ['nullable', 'array', 'max:'.($field->maxItems ?? 10)];
                     $rules = array_merge($rules, $this->rules($field->fields, $key.'.*.', $strict));
+
+                    // Link rows (label, href, document): the document stands in for the address.
+                    if (($document = $this->documentField($field->fields)) !== null && $this->hasField($field->fields, 'href')) {
+                        $rules[$key.'.*'] = ['array', $this->needsTarget('href', 'label', 'Add a link or choose a document.', $document)];
+                        $rules[$key.'.*.href'] = [...($rules[$key.'.*.href'] ?? ['nullable']), 'regex:'.self::SAFE_HREF];
+                    }
+
                     break;
                 case 'select':
                     $rules[$key] = [$strict ? 'required' : 'nullable', 'in:'.implode(',', array_column($field->options, 'value'))];
@@ -143,11 +156,8 @@ final readonly class BlockValidator
             $value = $data[$field->name] ?? null;
 
             $clean[$field->name] = match ($field->type) {
-                'link' => [
-                    'label' => is_array($value) && is_string($value['label'] ?? null) ? trim($value['label']) : '',
-                    'href' => is_array($value) && is_string($value['href'] ?? null) ? trim($value['href']) : '',
-                ],
-                'image' => is_numeric($value) ? (int) $value : null,
+                'link' => $this->normaliseLink($value),
+                'image', 'document' => is_numeric($value) ? (int) $value : null,
                 'list' => array_values(array_map(fn (mixed $item): string => trim((string) $item), is_array($value) ? $value : [])),
                 'repeater' => array_values(array_map(fn (mixed $row): array => $this->normalise($field->fields, is_array($row) ? $row : []), is_array($value) ? $value : [])),
                 'toggle' => (bool) $value,
@@ -173,8 +183,10 @@ final readonly class BlockValidator
         foreach ($fields as $field) {
             $value = $data[$field->name] ?? null;
 
-            if ($field->type === 'image' && is_int($value)) {
+            if (in_array($field->type, ['image', 'document'], true) && is_int($value)) {
                 $found[] = ['media_id' => $value, 'context' => trim($context.' '.$field->label)];
+            } elseif ($field->type === 'link' && is_array($value) && is_int($value['media_id'] ?? null)) {
+                $found[] = ['media_id' => $value['media_id'], 'context' => trim($context.' '.$field->label)];
             } elseif ($field->type === 'repeater' && is_array($value)) {
                 foreach ($value as $row) {
                     if (is_array($row)) {
@@ -186,6 +198,100 @@ final readonly class BlockValidator
         }
 
         return $found;
+    }
+
+    /**
+     * Document ids placed as links (link fields' media_id, document fields).
+     * The presenter resolves these to the files' current addresses.
+     *
+     * @param  list<Field>  $fields
+     * @param  array<string, mixed>  $data
+     * @return list<int>
+     */
+    public function documentsIn(array $fields, array $data): array
+    {
+        $found = [];
+
+        foreach ($fields as $field) {
+            $value = $data[$field->name] ?? null;
+
+            if ($field->type === 'document' && is_int($value)) {
+                $found[] = $value;
+            } elseif ($field->type === 'link' && is_array($value) && is_int($value['media_id'] ?? null)) {
+                $found[] = $value['media_id'];
+            } elseif ($field->type === 'repeater' && is_array($value)) {
+                foreach ($value as $row) {
+                    if (is_array($row)) {
+                        /** @var array<string, mixed> $row */
+                        $found = array_merge($found, $this->documentsIn($field->fields, $row));
+                    }
+                }
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * The name of a row's document field, if it has one.
+     *
+     * @param  list<Field>  $fields
+     */
+    public function documentField(array $fields): ?string
+    {
+        foreach ($fields as $field) {
+            if ($field->type === 'document') {
+                return $field->name;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  list<Field>  $fields
+     */
+    private function hasField(array $fields, string $name): bool
+    {
+        return in_array($name, array_map(fn (Field $field): string => $field->name, $fields), true);
+    }
+
+    /**
+     * {label, href} plus media_id only when a document is chosen, so plain
+     * links keep their two-key shape.
+     *
+     * @return array{label: string, href: string, media_id?: int}
+     */
+    private function normaliseLink(mixed $value): array
+    {
+        $link = [
+            'label' => is_array($value) && is_string($value['label'] ?? null) ? trim($value['label']) : '',
+            'href' => is_array($value) && is_string($value['href'] ?? null) ? trim($value['href']) : '',
+        ];
+
+        if (is_array($value) && is_numeric($value['media_id'] ?? null)) {
+            $link['media_id'] = (int) $value['media_id'];
+        }
+
+        return $link;
+    }
+
+    /**
+     * A filled label needs an address or a document.
+     */
+    private function needsTarget(string $href, string $label, string $message, string $document = 'media_id'): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($href, $label, $message, $document): void {
+            if (! is_array($value)) {
+                return;
+            }
+
+            $filled = fn (mixed $item): bool => is_int($item) || (is_string($item) && trim($item) !== '');
+
+            if ($filled($value[$label] ?? null) && ! $filled($value[$href] ?? null) && ! $filled($value[$document] ?? null)) {
+                $fail($message);
+            }
+        };
     }
 
     /**

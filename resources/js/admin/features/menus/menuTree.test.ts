@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fromServer, hrefOf, indent, linkItem, outdent, pageItem, pageMissing, removeItem, toPayload } from './menuTree';
+import { documentItem, documentMissing, fromServer, hrefOf, indent, linkItem, outdent, pageItem, pageMissing, removeItem, toPayload } from './menuTree';
 import type { EditItem, MenuItemData } from './types';
 
 const server = (id: number, label: string, extra: Partial<MenuItemData> = {}): MenuItemData => ({
@@ -83,5 +83,21 @@ describe('menu tree edits', () => {
         ]);
 
         expect(items.map(pageMissing)).toEqual([true, false, false]);
+    });
+
+    it('keeps documents by media id and flags one that left the library', () => {
+        const added = documentItem('Medication Guide', { id: 7, filename: 'guide.pdf', url: 'http://localhost:8000/storage/media/u/1-guide.pdf' });
+
+        expect(hrefOf(added)).toBe('/storage/media/u/1-guide.pdf');
+        expect(toPayload([added])).toEqual([{ label: 'Medication Guide', type: 'document', media_id: 7, is_visible: true, children: [] }]);
+
+        const items = fromServer([
+            { id: 1, label: 'Guide', type: 'document', page_id: null, page_title: null, page_published: null, anchor: null, url: null, media_id: 7, document_filename: 'guide.pdf', href: '/storage/media/u/2-guide.pdf', is_visible: true },
+            { id: 2, label: 'Gone', type: 'document', page_id: null, page_title: null, page_published: null, anchor: null, url: null, media_id: 8, document_filename: null, href: null, is_visible: true },
+        ]);
+
+        expect(items.map(documentMissing)).toEqual([false, true]);
+        expect(items.map(pageMissing)).toEqual([false, false]);
+        expect(hrefOf(at(items, 0))).toBe('/storage/media/u/2-guide.pdf');
     });
 });

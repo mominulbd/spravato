@@ -6,6 +6,8 @@ namespace Database\Seeders\Content;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Uptms\Media\Actions\ReplaceMediaFileAction;
 use Uptms\Media\Actions\UploadMediaAction;
 use Uptms\Media\Jobs\GenerateMediaVariants;
 use Uptms\Media\Models\Media;
@@ -56,7 +58,9 @@ class SiteMediaSeeder extends Seeder
 
     /**
      * Official documents, uploaded only when the PDF is in assets/spravato
-     * (they are not in the repository yet). file → [folder, title].
+     * (they are not in the repository yet: docs/DEVELOPMENT-PLAN.md §4,
+     * decision 4). They go through the same upload as the admin, so a file
+     * that is not really a PDF is refused. file → [folder, title].
      */
     public const array DOCUMENTS = [
         'spravato-medication-guide.pdf' => ['Documents', 'Medication Guide'],
@@ -64,7 +68,10 @@ class SiteMediaSeeder extends Seeder
         'spravato-instructions-for-use.pdf' => ['Documents', 'Instructions for Use'],
     ];
 
-    public function __construct(private readonly UploadMediaAction $upload) {}
+    public function __construct(
+        private readonly UploadMediaAction $upload,
+        private readonly ReplaceMediaFileAction $replace,
+    ) {}
 
     public function run(): void
     {
@@ -80,17 +87,21 @@ class SiteMediaSeeder extends Seeder
 
         foreach ($files as $file => [$folder, $alt, $dir]) {
             $existing = Media::query()->where('original_name', $file)->first();
+            $path = database_path("seeders/assets/{$dir}/{$file}");
 
             if ($existing instanceof Media) {
-                $this->repair($existing, $alt);
+                $this->repair($existing, $alt, $path);
 
                 continue;
             }
 
-            $path = database_path("seeders/assets/{$dir}/{$file}");
-
             if (! is_file($path)) {
-                continue; // an optional document that has not been supplied
+                if (array_key_exists($file, self::DOCUMENTS)) {
+                    // Links to it stay hidden until it is supplied or uploaded in the admin.
+                    $this->command?->warn("Official document missing: database/seeders/assets/{$dir}/{$file}");
+                }
+
+                continue;
             }
 
             $media = $this->upload->execute(new UploadedFile($path, $file, null, null, true), MediaFolder::query()->where('name', $folder)->value('id'), null);
@@ -98,9 +109,17 @@ class SiteMediaSeeder extends Seeder
         }
     }
 
-    /** A run that stopped half-way can leave a file without alt text or variants. */
-    private function repair(Media $media, string $alt): void
+    /**
+     * A run that stopped half-way can leave a file without alt text or
+     * variants; a database restored without its storage leaves a row whose
+     * file is gone, so the site would link to a 404. Put the file back.
+     */
+    private function repair(Media $media, string $alt, string $source): void
     {
+        if (is_file($source) && ! Storage::disk($media->disk)->exists($media->path)) {
+            $media = $this->replace->execute($media, new UploadedFile($source, basename($source), null, null, true));
+        }
+
         if ($media->alt === null || $media->alt === '') {
             $media->forceFill(['alt' => $alt])->saveQuietly();
         }

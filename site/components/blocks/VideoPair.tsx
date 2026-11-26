@@ -28,8 +28,8 @@ export function VideoPair({ block }: { block: Block<Data> }) {
         intro={data.intro}
       />
       <div className="grid gap-6 md:grid-cols-2">
-        {(data.videos ?? []).map((video) => (
-          <article key={video.title} className="flex flex-col overflow-hidden rounded-sheet bg-paper">
+        {(data.videos ?? []).map((video, index) => (
+          <article key={`${index}-${video.title}`} className="flex flex-col overflow-hidden rounded-sheet bg-paper">
             <div className="relative aspect-[588/330] w-full overflow-hidden">
               <VideoCard title={video.title} url={(video.url ?? "").trim()} cover={<Picture image={video.poster} sizes="(min-width: 768px) 588px, 100vw" className="absolute inset-0 size-full object-cover" />} />
             </div>

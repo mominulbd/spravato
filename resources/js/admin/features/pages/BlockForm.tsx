@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, Info, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, FileText, Info, Plus, Trash2, X } from 'lucide-react';
 import { Button, Select, TagInput, TextInput, Textarea, Toggle, cn } from '@shared/ui';
 import { CONTENT_TOKENS_HELP, type ContentLink } from '@admin/lib/content';
 import { ImageField } from '@admin/features/media/ImageField';
+import { MediaPicker } from '@admin/features/media/MediaPicker';
+import { useMediaItem } from '@admin/features/media/api';
 import { emptyRow, getPath, setPath } from './editorState';
 import type { BlockData, BlockField } from './types';
 
@@ -137,6 +139,8 @@ export function FieldControl({ field, value, onChange, errors, path, inGroup = f
             return <LinkControl field={field} value={value} onChange={onChange} errors={errors} path={path} inGroup={inGroup} />;
         case 'image':
             return <ImageField label={field.label} value={typeof value === 'number' ? value : null} onChange={onChange} help={field.help} error={error} />;
+        case 'document':
+            return <DocumentControl label={field.label} value={typeof value === 'number' ? value : null} onChange={onChange} help={field.help} error={error} />;
         case 'list':
             return <ListControl field={field} value={Array.isArray(value) ? (value as string[]) : []} onChange={onChange} errors={errors} path={path} />;
         case 'repeater':
@@ -165,12 +169,58 @@ export function FieldControl({ field, value, onChange, errors, path, inGroup = f
     }
 }
 
+/**
+ * A PDF from the library (official documents). Stored as the media id, so
+ * the website link follows the file when it is replaced.
+ */
+function DocumentControl({ label, value, onChange, help, error, compact = false }: { label: string; value: number | null; onChange: (id: number | null) => void; help?: string; error?: string; compact?: boolean }) {
+    const [picking, setPicking] = useState(false);
+    const media = useMediaItem(value);
+    const name = value === null ? 'No document chosen.' : media.data ? media.data.filename : media.isError ? 'This file is no longer in the library.' : 'Loading…';
+
+    return (
+        <div className="flex flex-col gap-1.5">
+            {!compact && <span className="text-admin-label font-semibold text-ink">{label}</span>}
+            <div className={cn('flex items-center gap-3 rounded-card border bg-white p-3', error ? 'border-danger' : 'border-line')}>
+                <FileText className="size-5 shrink-0 text-royal" aria-hidden="true" />
+                <p className={cn('min-w-0 flex-1 truncate text-admin-body', value !== null && media.isError ? 'font-semibold text-danger' : 'text-ink')}>{name}</p>
+                <Button size="sm" variant="secondary" onClick={() => setPicking(true)}>
+                    {value === null ? 'Choose document' : 'Replace'}
+                </Button>
+                {value !== null && (
+                    <Button size="sm" variant="ghost" icon={<X className="size-3.5" />} aria-label={`Remove ${label.toLowerCase()}`} onClick={() => onChange(null)}>
+                        Remove
+                    </Button>
+                )}
+            </div>
+            {error && <p className="text-admin-small text-danger">{error}</p>}
+            {help && !error && <p className="text-admin-small text-ink-soft">{help}</p>}
+            {picking && <MediaPicker open kind="document" title="Choose a document" onClose={() => setPicking(false)} onSelect={(picked) => onChange(picked.id)} />}
+        </div>
+    );
+}
+
+type StoredLink = ContentLink & { media_id?: number };
+
 function LinkControl({ field, value, onChange, errors, path, inGroup }: Omit<FieldControlProps, 'inGroup'> & { inGroup: boolean }) {
-    const link: ContentLink = value !== null && typeof value === 'object' ? { label: '', href: '', ...(value as Partial<ContentLink>) } : { label: '', href: '' };
+    const link: StoredLink = value !== null && typeof value === 'object' ? { label: '', href: '', ...(value as Partial<StoredLink>) } : { label: '', href: '' };
+    const document = typeof link.media_id === 'number' ? link.media_id : null;
     const body = (
         <>
             <TextInput label="Label" value={link.label} maxLength={80} error={errors[`${path}.label`]} onChange={(event) => onChange({ ...link, label: event.target.value })} />
-            <TextInput label="Link" value={link.href} maxLength={190} placeholder="/contact, #faq, https://…, tel:clinic" error={errors[`${path}.href`] ?? errors[path]} onChange={(event) => onChange({ ...link, href: event.target.value })} />
+            {document === null ? (
+                <div className="flex flex-col gap-1">
+                    <TextInput label="Link" value={link.href} maxLength={190} placeholder="/contact, #faq, https://…, tel:clinic" error={errors[`${path}.href`] ?? errors[path]} onChange={(event) => onChange({ ...link, href: event.target.value })} />
+                    <DocumentPick onPick={(id) => onChange({ label: link.label, href: '', media_id: id })} />
+                </div>
+            ) : (
+                <DocumentControl
+                    label="Document"
+                    value={document}
+                    error={errors[`${path}.media_id`] ?? errors[path]}
+                    onChange={(id) => onChange(id === null ? { label: link.label, href: '' } : { ...link, media_id: id })}
+                />
+            )}
         </>
     );
 
@@ -188,6 +238,20 @@ function LinkControl({ field, value, onChange, errors, path, inGroup }: Omit<Fie
             <legend className="float-left mb-1 w-full font-display text-[10px] leading-[1.3] font-bold tracking-[1.1px] text-ink-soft uppercase">{field.label}</legend>
             <div className="grid gap-3 @md:grid-cols-2">{body}</div>
         </fieldset>
+    );
+}
+
+/** "Link to a document instead" under a link's address. */
+function DocumentPick({ onPick }: { onPick: (id: number) => void }) {
+    const [picking, setPicking] = useState(false);
+
+    return (
+        <>
+            <button type="button" className="self-start text-admin-small font-semibold text-royal hover:underline" onClick={() => setPicking(true)}>
+                Link to a document instead
+            </button>
+            {picking && <MediaPicker open kind="document" title="Choose a document" onClose={() => setPicking(false)} onSelect={(picked) => onPick(picked.id)} />}
+        </>
     );
 }
 

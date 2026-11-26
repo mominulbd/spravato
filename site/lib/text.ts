@@ -32,6 +32,24 @@ export function isExternal(href: string): boolean {
   return /^https?:\/\//.test(href);
 }
 
+/** `/storage/media/…/x-medication-guide.pdf`, with or without `?…`/`#…`. */
+export function isPdf(href: string): boolean {
+  return /\.pdf(?:[?#].*)?$/i.test(href);
+}
+
+/**
+ * Anchor attributes for a CMS link. Official documents are PDFs served by
+ * Laravel from /storage (inline, application/pdf): they open in a new tab.
+ * Other external links also get a new tab; site links stay in place.
+ */
+export function linkProps(href: string): { type?: string; target?: string; rel?: string } {
+  if (isPdf(href)) {
+    return { type: "application/pdf", target: "_blank", rel: "noopener" };
+  }
+
+  return isExternal(href) ? { target: "_blank", rel: "noopener noreferrer" } : {};
+}
+
 export interface Segment {
   text: string;
   accent: boolean;

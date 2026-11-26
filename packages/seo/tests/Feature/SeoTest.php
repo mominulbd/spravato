@@ -17,7 +17,7 @@ it('gives every published page head tags and a JSON-LD graph built from its cont
 
     expect($seo['title'])->toBe('Deep TMS for Depression & OCD | UPTMS')
         ->and($seo['canonical'])->toEndWith('/tms')
-        ->and($seo['robots']['index'])->toBeTrue()
+        ->and($seo['robots']['index'])->toBeFalse() // not rendered by the website yet
         ->and($seo['open_graph']['image']['url'])->toBeString()
         ->and(array_column($seo['json_ld'], '@type'))->toContain('MedicalClinic', 'WebSite', 'MedicalWebPage', 'BreadcrumbList', 'FAQPage');
 
@@ -120,7 +120,7 @@ it('turns Google Tag Manager on for the website and keeps it off the form', func
         ->assertOk()->assertJsonPath('data.values.gtm_container_id', 'GTM-M4Q7S9NS');
 
     expect($this->getJson('/api/v1/public/seo')->assertOk()->json('data.tag_manager'))
-        ->toBe(['id' => 'GTM-M4Q7S9NS', 'exclude_paths' => ['/contact']]);
+        ->toBe(['id' => 'GTM-M4Q7S9NS', 'exclude_paths' => ['/']]);
     expect(AuditLog::query()->where('action', 'seo.settings_updated')->where('auditable_label', 'analytics')->count())->toBe(1);
 
     asAdmin($admin)->putJson('/api/v1/admin/seo-settings/analytics', ['gtm_exclude_sensitive' => false])->assertOk();

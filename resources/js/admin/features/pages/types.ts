@@ -44,7 +44,7 @@ export interface PageDetail extends PageRow {
     blocks: PageBlock[];
 }
 
-export type FieldType = 'text' | 'headline' | 'textarea' | 'markdown' | 'link' | 'image' | 'list' | 'repeater' | 'select' | 'toggle' | 'source';
+export type FieldType = 'text' | 'headline' | 'textarea' | 'markdown' | 'link' | 'image' | 'document' | 'list' | 'repeater' | 'select' | 'toggle' | 'source';
 
 export interface BlockField {
     name: string;

@@ -13,8 +13,8 @@ use Uptms\Settings\Services\PublicSettings;
 /**
  * The JSON-LD graph of Figma 10: the clinic (from Clinic settings), the
  * website, this page, its breadcrumbs, and what the page itself holds —
- * FAQs, clinicians, therapies or an article. Each piece can be switched
- * off per page; staff may append custom nodes.
+ * FAQs, clinicians or an article. Each piece can be switched off per page;
+ * staff may append custom nodes (the Spravato page adds its Drug node so).
  */
 final class SchemaGraph
 {
@@ -47,7 +47,7 @@ final class SchemaGraph
                 return;
             }
             $enabled = ! in_array($key, $disabled, true);
-            $pieces[] = ['key' => $key, 'type' => (string) $node['@type'], 'label' => $label, 'detail' => $detail, 'source' => $source, 'enabled' => $enabled];
+            $pieces[] = ['key' => $key, 'type' => is_array($node['@type']) ? implode(', ', $node['@type']) : (string) $node['@type'], 'label' => $label, 'detail' => $detail, 'source' => $source, 'enabled' => $enabled];
             if ($enabled) {
                 $graph[] = $node;
             }
@@ -132,8 +132,11 @@ final class SchemaGraph
         }
 
         foreach ($subject->people as $index => $person) {
-            $add('person_'.$index, 'Physician', trim($person['name'].($person['credentials'] ? ', '.$person['credentials'] : '')), 'From team', array_filter([
-                '@type' => $person['founder'] ? 'Physician' : 'Person',
+            // schema.org's Physician is a medical organization, so a clinician
+            // marked Physician is typed both ways to keep Person properties valid.
+            $type = $person['schema_type'] === 'Physician' ? ['Person', 'IndividualPhysician'] : 'Person';
+            $add('person_'.$index, $person['schema_type'], trim($person['name'].($person['credentials'] ? ', '.$person['credentials'] : '')), 'From team', array_filter([
+                '@type' => $type,
                 '@id' => $base.'/#person-'.Str::slug($person['name']),
                 'name' => $person['name'],
                 'honorificSuffix' => $person['credentials'],
@@ -141,16 +144,6 @@ final class SchemaGraph
                 'image' => $person['image'],
                 'worksFor' => ['@id' => $base.'/#clinic'],
             ], fn (mixed $v): bool => $v !== null && $v !== ''));
-        }
-
-        if ($subject->therapies !== []) {
-            $add('therapy', 'MedicalTherapy', implode(', ', array_column($subject->therapies, 'name')), 'From conditions', [
-                '@type' => 'MedicalTherapy',
-                '@id' => $url.'#therapy',
-                'name' => 'Deep TMS (BrainsWay)',
-                'relevantSpecialty' => 'Psychiatric',
-                'usedToTreat' => array_map(fn (array $t): array => ['@type' => 'MedicalCondition', 'name' => $t['name']], $subject->therapies),
-            ]);
         }
 
         foreach (self::customNodes($meta->schema_custom) as $index => $node) {

@@ -53,7 +53,8 @@ class CollectionsContentSeeder extends Seeder
             'photo_id' => SiteMediaSeeder::id('ayub-mwaura.jpg'),
             'show_on' => ['home', 'tms', 'contact'],
             'is_founder' => true,
-            'schema_type' => 'Physician',
+            // A nurse practitioner, not a physician: schema.org Person.
+            'schema_type' => 'Person',
         ]);
         $this->add('team', TeamMember::class, [
             'name' => 'Cathy Mwangi',

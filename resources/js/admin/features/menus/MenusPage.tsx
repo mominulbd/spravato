@@ -11,10 +11,10 @@ import { FormAlert } from '@admin/features/auth/FormAlert';
 import { AddItemsPanel } from './AddItemsPanel';
 import { useMenu, useMenus, usePageOptions, useSaveMenu } from './api';
 import { ItemDialog } from './ItemDialog';
-import { countItems, fromServer, hrefOf, indent, moveChild, outdent, pageMissing, removeItem, toPayload, updateItem } from './menuTree';
+import { countItems, documentMissing, fromServer, hrefOf, indent, moveChild, outdent, pageMissing, removeItem, toPayload, updateItem } from './menuTree';
 import type { EditItem, MenuDetail, PageOption } from './types';
 
-const TYPE_LABEL = { page: 'Page', anchor: 'Anchor', link: 'Link' } as const;
+const TYPE_LABEL = { page: 'Page', anchor: 'Anchor', link: 'Link', document: 'Document' } as const;
 
 /** Figma 17: pick a menu, reorder and edit its links, add pages or links. */
 export function MenusPage() {
@@ -130,6 +130,8 @@ function Editor({ menu, pages, pagesLoading, menuList }: { menu: MenuDetail; pag
                 <p className="truncate text-[15px] font-semibold text-ink">{item.label || 'Untitled'}</p>
                 {pageMissing(item) ? (
                     <p className="truncate text-admin-small font-semibold text-danger">Page deleted · choose another page or remove this item</p>
+                ) : documentMissing(item) ? (
+                    <p className="truncate text-admin-small font-semibold text-danger">Document no longer in the library · choose another or remove this item</p>
                 ) : (
                     <p className="truncate text-admin-small text-ink-soft">{hrefOf(item)}</p>
                 )}

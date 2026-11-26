@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { NO_INDEX, indexingAllowed } from "@/lib/seo";
 import { fontVariables } from "./fonts";
 import "./globals.css";
 
@@ -8,8 +9,9 @@ export const metadata: Metadata = {
   title: "Spravato® Treatment near Tacoma & University Place | UPTMS",
   description:
     "Explore Spravato® (esketamine) treatment in University Place near Tacoma. Learn about eligibility, supervised visits, insurance and consultation options at UPTMS.",
-  // Nothing is indexed until launch (docs/DEVELOPMENT-PLAN.md, Phase 3).
-  robots: process.env.ALLOW_INDEXING === "true" ? undefined : { index: false, follow: false },
+  // Fallback for routes without their own metadata (404s); pages set robots via buildMetadata,
+  // which applies the same guard. Nothing is indexed until launch (docs/DEVELOPMENT-PLAN.md, Phase 3).
+  robots: indexingAllowed() ? undefined : { ...NO_INDEX },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

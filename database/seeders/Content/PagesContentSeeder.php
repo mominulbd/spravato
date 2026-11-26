@@ -83,8 +83,9 @@ class PagesContentSeeder extends Seeder
 
     /**
      * The Spravato landing page (Figma "Spravato", desktop 1440). Every
-     * "Request a consultation" button links to #consultation, which opens
-     * the consultation dialog (DEVELOPMENT-PLAN.md, Phase 2).
+     * consultation button links to #consultation, which opens the
+     * consultation dialog (DEVELOPMENT-PLAN.md, Phase 2); `?topic=` chooses
+     * what it opens on (Uptms\Consultations\Domain\Enums\ConsultationTopic).
      *
      * @return list<array<string, mixed>>
      */
@@ -113,7 +114,7 @@ class PagesContentSeeder extends Seeder
                     ['value' => '2+ hours', 'label' => 'Monitoring after each dose'],
                 ],
                 'primary' => $consult,
-                'link' => $guide === null ? null : $this->link('Read the Medication Guide →', $guide),
+                'link' => $guide === null ? null : $this->documentLink('Read the Medication Guide →', $guide),
                 'image' => SiteMediaSeeder::id('spravato-product.jpg'),
                 'image_side' => 'left',
                 'caption_eyebrow' => 'Prescription nasal spray',
@@ -124,7 +125,7 @@ class PagesContentSeeder extends Seeder
                 'anchor' => 'eligibility',
                 'headline' => 'Is Spravato *right for you?*',
                 'intro' => 'You do not need to figure that out alone. A consultation can help you understand treatment-resistant depression and the options worth considering.',
-                'primary' => $this->link('Discuss your eligibility', '#consultation'),
+                'primary' => $this->link('Discuss your eligibility', '#consultation?topic=eligibility'),
                 'items' => [
                     ['title' => 'You are an adult living with depression', 'body' => 'Spravato is approved for adults. Your clinician reviews the diagnosis and the symptoms affecting your life.'],
                     ['title' => 'Previous antidepressants haven’t helped enough', 'body' => 'Bring details of medicines you have tried, including how long you took them and how you responded.'],
@@ -147,7 +148,7 @@ class PagesContentSeeder extends Seeder
                 'note_body' => 'Allow for check-in, treatment and at least two hours of monitoring. Arrange a ride home for every visit.',
                 'note_caption' => 'Representative treatment setting supplied by SPRAVATO®. Not a photograph of the UPTMS clinic.',
                 'note_image' => SiteMediaSeeder::id('spravato-treatment-room-01.jpg'),
-                'note_cta' => $this->link('Talk through your first visit', '#consultation'),
+                'note_cta' => $this->link('Talk through your first visit', '#consultation?topic=first_visit'),
             ]),
             $this->block('schedule', [
                 'rail' => 'Spravato treatment schedule',
@@ -178,8 +179,8 @@ class PagesContentSeeder extends Seeder
                 'anchor' => 'care-team',
                 'headline' => 'People who take *time to listen.*',
                 'intro' => 'Thoughtful care starts with people who listen. Meet two members of the University Place TMS Clinic team serving patients across Greater Tacoma.',
-                'founder_link' => $this->link('Start a conversation →', '#consultation'),
-                'member_link' => $this->link('Ask the team a question →', '#consultation'),
+                'founder_link' => $this->link('Start a conversation →', '#consultation?topic=question'),
+                'member_link' => $this->link('Ask the team a question →', '#consultation?topic=question'),
             ]),
             $this->block('coverage_location', [
                 'rail' => 'Spravato treatment near Tacoma',
@@ -189,7 +190,7 @@ class PagesContentSeeder extends Seeder
                 'coverage_title' => 'Questions about coverage?',
                 'coverage_body' => 'Coverage depends on your plan, medical-necessity criteria, prior authorization and network status. Ask the clinic about benefits verification and potential out-of-pocket costs before treatment begins.',
                 'coverage_items' => ['Benefits verification before you start', 'Prior authorization guidance', 'Clear notes on out-of-pocket costs'],
-                'coverage_cta' => $this->link('Ask about coverage & cost', '#consultation'),
+                'coverage_cta' => $this->link('Ask about coverage & cost', '#consultation?topic=insurance'),
                 'location_eyebrow' => 'University Place TMS Clinic',
                 'location_title' => 'A conversation close to home.',
                 'location_body' => 'Find us in University Place, close to Tacoma, Fircrest and Lakewood. Call the clinic for current appointment availability.',
@@ -219,32 +220,38 @@ class PagesContentSeeder extends Seeder
 
     /**
      * Links to the official documents that have been uploaded, in the
-     * Figma order. Empty until the PDFs are supplied.
+     * Figma order. Empty until the PDFs are supplied. Each link carries the
+     * media id, so it keeps working when staff replace the file.
      *
-     * @return list<array{label: string, href: string}>
+     * @return list<array{label: string, href: string, media_id: int}>
      */
     private function documentLinks(string $suffix = ''): array
     {
         $links = [];
 
         foreach (SiteMediaSeeder::DOCUMENTS as $file => [, $title]) {
-            $href = $this->document($file);
+            $id = $this->document($file);
 
-            if ($href !== null) {
-                $links[] = $this->link($title.$suffix, $href);
+            if ($id !== null) {
+                $links[] = ['label' => $title.$suffix, 'href' => '', 'media_id' => $id];
             }
         }
 
         return $links;
     }
 
-    /** Site-relative address of an uploaded official document, or null. */
-    private function document(string $file): ?string
+    /** @return array{label: string, href: string, media_id: int} */
+    private function documentLink(string $label, int $mediaId): array
     {
-        $media = Media::query()->where('original_name', $file)->first();
-        $path = $media instanceof Media ? parse_url($media->url(), PHP_URL_PATH) : null;
+        return ['label' => $label, 'href' => '', 'media_id' => $mediaId];
+    }
 
-        return is_string($path) ? $path : null;
+    /** Media id of an uploaded official document, or null. */
+    private function document(string $file): ?int
+    {
+        $id = Media::query()->where('original_name', $file)->where('kind', Media::DOCUMENT)->value('id');
+
+        return is_numeric($id) ? (int) $id : null;
     }
 
     /** @return list<array<string, mixed>> */
@@ -418,13 +425,12 @@ class PagesContentSeeder extends Seeder
                 'anchor' => 'privacy-policy',
                 'headline' => 'Privacy policy',
                 'body' => implode("\n\n", [
-                    '**Last updated November 8, 2026.** University Place TMS Clinic & General Psychiatry (“the clinic”, “we”) runs this website. This page explains what the site collects, why, who else is involved and the choices you have. It covers this website only. Health information we hold about you as a patient is governed by our Notice of Privacy Practices under HIPAA, which you receive when you become a patient.',
+                    '**Last updated November 26, 2026.** University Place TMS Clinic & General Psychiatry (“the clinic”, “we”) runs this website. This page explains what the site collects, why, who else is involved and the choices you have. It covers this website only. Health information we hold about you as a patient is governed by our Notice of Privacy Practices under HIPAA, which you receive when you become a patient.',
 
                     '## What this site collects',
                     'You can read every page without telling us who you are. Our hosting provider keeps standard server logs (IP address, browser type, pages requested) to keep the site running and secure; we do not use them to identify you.',
-                    'If you send a **consultation request**, we receive what you enter: your first and last name, phone number, email address, insurance, whether you have tried therapy or antidepressants, how and when you would like to be contacted, what you would like to talk about, a referring provider if you name one, and your message. The request also records the page you sent it from, the page on our site you visited just before, the domain of the site that referred you, any campaign tags in the link you followed, and a coarse description of your device such as “Mobile · Safari”.',
-                    'The **self-check** is scored in your browser and shown to you there. If you complete the contact step and send it, your answers and scores reach the clinic together with your contact details, in the same way as a consultation request. If you stop before that, nothing you answered leaves your device.',
-                    'Please do not send health details by email. Use the form on our [contact page](/contact) or call us.',
+                    'If you send a **consultation request**, we receive what you enter: your first and last name, phone number, email address, how and when you would like to be contacted, whether you are a new or existing patient, what you would like to discuss, your insurance provider if you name one, your message, and that you confirmed the form is not an emergency service. The request also records which button you used to open the form, the page you sent it from, the page on our site you visited just before, the domain of the site that referred you, any campaign tags in the link you followed, and a coarse description of your device such as “Mobile · Safari”.',
+                    'Please do not send health details by email or in the form’s message. Use the consultation form on our [Spravato page](/) or call us.',
 
                     '## How we use it',
                     'We use what you send to call or email you back, answer your question, check your insurance and keep a record of the request while the clinic follows it up. We do not sell personal information, and we do not use it for advertising.',

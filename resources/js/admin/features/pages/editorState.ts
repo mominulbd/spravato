@@ -119,6 +119,7 @@ export function emptyValue(field: BlockField): unknown {
         case 'source':
             return (field.default as string | undefined) ?? field.options?.[0]?.value ?? '';
         case 'image':
+        case 'document':
             return null;
         default:
             return '';

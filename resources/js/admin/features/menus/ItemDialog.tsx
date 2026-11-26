@@ -1,15 +1,19 @@
 import { useState } from 'react';
+import { FileText } from 'lucide-react';
 import { Button, Dialog, Select, TextInput, Toggle } from '@shared/ui';
 import { CONTENT_TOKENS_HELP } from '@admin/lib/content';
+import { MediaPicker } from '@admin/features/media/MediaPicker';
+import { documentFields, documentMissing } from './menuTree';
 import type { EditItem, MenuItemType, PageOption } from './types';
 
 /** Edit one menu link: label, what it points at, visibility. */
 export function ItemDialog({ item, pages, onClose, onSave }: { item: EditItem; pages: PageOption[]; onClose: () => void; onSave: (item: EditItem) => void }) {
     const [value, setValue] = useState(item);
+    const [picking, setPicking] = useState(false);
     const set = <K extends keyof EditItem>(key: K, next: EditItem[K]) => setValue((current) => ({ ...current, [key]: next }));
     const page = pages.find((option) => option.id === value.page_id);
-    const valid =
-        value.label.trim() !== '' && (value.type === 'link' ? value.url.trim() !== '' : value.page_id !== null) && (value.type !== 'anchor' || /^[a-z0-9-]+$/.test(value.anchor));
+    const target = value.type === 'link' ? value.url.trim() !== '' : value.type === 'document' ? !documentMissing(value) : value.page_id !== null;
+    const valid = value.label.trim() !== '' && target && (value.type !== 'anchor' || /^[a-z0-9-]+$/.test(value.anchor));
 
     return (
         <Dialog
@@ -34,8 +38,9 @@ export function ItemDialog({ item, pages, onClose, onSave }: { item: EditItem; p
                     <option value="page">A page</option>
                     <option value="anchor">A section of a page</option>
                     <option value="link">Any address</option>
+                    <option value="document">A document (PDF) from the library</option>
                 </Select>
-                {value.type !== 'link' && (
+                {(value.type === 'page' || value.type === 'anchor') && (
                     <Select
                         label="Page"
                         value={value.page_id ?? ''}
@@ -78,6 +83,30 @@ export function ItemDialog({ item, pages, onClose, onSave }: { item: EditItem; p
                         onChange={(event) => set('url', event.target.value)}
                         help={`A page, #anchor, https://, tel: or mailto:. ${CONTENT_TOKENS_HELP}`}
                     />
+                )}
+                {value.type === 'document' && (
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-admin-label font-semibold text-ink">Document</span>
+                        <div className="flex items-center gap-3 rounded-card border border-line bg-white p-3">
+                            <FileText className="size-5 shrink-0 text-royal" aria-hidden="true" />
+                            <p className="min-w-0 flex-1 truncate text-admin-body text-ink">
+                                {value.document_name ?? (value.media_id !== null ? 'This file is no longer in the library.' : 'No document chosen.')}
+                            </p>
+                            <Button size="sm" variant="secondary" onClick={() => setPicking(true)}>
+                                {value.media_id === null ? 'Choose document' : 'Replace'}
+                            </Button>
+                        </div>
+                        <p className="text-admin-small text-ink-soft">The link follows the file when it is replaced in the media library.</p>
+                        {picking && (
+                            <MediaPicker
+                                open
+                                kind="document"
+                                title="Choose a document"
+                                onClose={() => setPicking(false)}
+                                onSelect={(picked) => setValue((current) => ({ ...current, ...documentFields(picked) }))}
+                            />
+                        )}
+                    </div>
                 )}
                 <Toggle
                     label="Visible"

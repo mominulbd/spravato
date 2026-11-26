@@ -160,7 +160,7 @@ Responses are cached in Laravel (`PublicCache`, one version bump per publish) an
 | Method & path | Returns |
 | --- | --- |
 | `GET settings` | `{clinic{name, tagline, service_area_label, service_area[], phone{display, href}, email, address{street, locality, region, postal_code, country, single_line}, geo, directions_url, main_site_url, social[]}, hours{short, long, days[], closures[]}, announcement, legal{copyright, crisis, crisis_short, insurance, testimonials, quiz}}` |
-| `GET menus` | `{header, mobile, section-nav, footer-explore, footer-legal}`, each `[{label, href, children[]}]`. Hidden items and links to unpublished pages are left out |
+| `GET menus` | `{header, mobile, section-nav, footer-explore, footer-legal, documents}`, each `[{label, href, children[]}]`. Hidden items, links to unpublished pages and documents that are trashed or gone are left out. A document item's `href` is the file's current `/storage/…` path |
 | `GET page?path=/tms` | `{id, title, path, template, is_home, preview, published_at, updated_at, blocks[{id, type, anchor, number, data, sources}]}`. `number` is the section number ("01"…) in order; `data` follows the block's field schema with images expanded to `{id, url, width, height, alt, focal{x,y}, sources{avif[], webp[]}}`; `sources` holds collection data (FAQs, team, conditions…). `&preview=<token>` returns the working copy for a valid signed token (30 min), uncached |
 | `GET pages` | Published `[{path, title, template, updated_at}]` |
 | `GET conditions`, `GET conditions/{slug}` | Cards `[{id, slug, path, number, eyebrow, title, summary, card_link_label, image, detail_title, detail_body, source, cta, reviewed_at}]`; the detail adds `faqs[]` (group `conditions/<slug>`) |
@@ -174,7 +174,7 @@ Links in block data may use tokens the website fills from settings: `{phone}`, `
 | Method & path | Permission | Notes |
 | --- | --- | --- |
 | `GET pages?search=&filter[status]=draft\|published\|scheduled\|trash&filter[template]&filter[author]&sort=path\|title\|updated_at\|status&per_page` | content.edit | `meta.counts{all, published, draft, scheduled, trash}`, `meta.templates`, `meta.authors` |
-| `GET pages/block-types` | content.edit | The block library: `[{key, label, icon, description, fields[], defaults}]`. Field types: text, headline, textarea, markdown, link, image, list, repeater, select, toggle, source (options included). The API validates block data with the same schema |
+| `GET pages/block-types` | content.edit | The block library: `[{key, label, icon, description, fields[], defaults}]`. Field types: text, headline, textarea, markdown, link, image, document, list, repeater, select, toggle, source (options included). The API validates block data with the same schema. A link is `{label, href}` or `{label, href: "", media_id}` for a PDF from the library (`media_id` must be a document that isn't trashed; a filled label needs an href or a document). A `document` field is a PDF media id; in a repeater row beside `href` (FAQ `aside_links`) it stands in for the href. The public page always gets `{label, href}` with the document's current path; a trashed or missing document gives an empty link (`{label: "", href: ""}`) and drops the row |
 | `POST pages` `{title, slug, template, parent_id}` | content.edit | Draft with the template's starter blocks. Reserved first segments: api, admin, conditions, resources, storage … |
 | `GET pages/{id}` | content.edit | Page + working-copy `blocks[]` + `lock_version` |
 | `PUT pages/{id}` `{title, slug, template, parent_id}` | content.edit (+ content.publish once published) | Children follow a moved page; the home page stays at `/` |
@@ -196,7 +196,7 @@ Links in block data may use tokens the website fills from settings: `{phone}`, `
 
 ### Navigation menus (Figma 17)
 
-`GET menus`, `GET menus/{key}` (content.edit) → `{key, name, items[{id, label, type: page|anchor|link, page_id, page_title, page_published, anchor, url, href, is_visible, children[]}], preview}`. `PUT menus/{key} {items[]}` (content.publish) replaces the tree (one level of children). Page and anchor items store the page id, so a changed address follows.
+`GET menus`, `GET menus/{key}` (content.edit) → `{key, name, items[{id, label, type: page|anchor|link|document, page_id, page_title, page_published, anchor, url, media_id, document_filename, href, is_visible, children[]}], preview}`. `document` items take `media_id` (a PDF from the library, `PlaceableMedia(document)`; 422 on `items.N.media_id` otherwise); `document_filename` is null when the file was trashed, and the website skips the item. `PUT menus/{key} {items[]}` (content.publish) replaces the tree (one level of children). Page and anchor items store the page id, so a changed address follows.
 
 ### Quiz (Figma 16)
 
@@ -226,31 +226,30 @@ Links in block data may use tokens the website fills from settings: `{phone}`, `
 
 Error codes are unchanged. Every write is audited without patient details; every opening of a request is audited as `consultation.viewed`.
 
-### Website form (`/api/v1/public`, anonymous)
+### Consultation dialog (`/api/v1/public`, anonymous)
 
-`POST consultation-requests` — `throttle:public-forms` (5/min per visitor) on top of `public`.
+`GET consultation-form` → `{accepting, topics[{value, label}], best_times[], contact_methods[], patient_statuses[]}`: the dialog's choices (also the `consultation-form` block source). 404 when the module is disabled; the dialog then offers the phone number only.
 
-`POST quiz-submissions` and `POST quiz-submissions/feedback` — the self-check, same throttle, Turnstile and honeypot; see docs/QUIZ.md. The submission is checked and scored against the published quiz and filed as a consultation request (`origin: quiz`, encrypted `quiz_results`); a crisis answer makes its follow-up due at once.
+`POST consultation-requests` — the Spravato consultation dialog (Figma "Consultation dialog"), posted by the Next.js server action. `throttle:public-forms` (5/min per visitor) on top of `public`.
 
 | Field | Rules |
 | --- | --- |
 | `first_name`, `last_name` | required, ≤ 60 each; stored together as `name` |
 | `phone` | required, 10-digit U.S. number (an 11-digit one must start with 1) |
 | `email` | required, valid email ≤ 190 |
-| `insurance` | required, ≤ 120: an insurance partner's name, `Other` or `No insurance` (**encrypted**) |
-| `prior_treatment` | required: `both` · `therapy_only` · `medication_only` · `neither` (**encrypted**) |
-| `contact_method` | required: `phone` · `text` · `email` |
-| `topic` | optional (default `tms_depression`): `tms_depression` · `insurance` · `ocd_specialty` · `loved_one` · `provider_referral` |
-| `best_time` | optional: `anytime` · `mornings` · `afternoons` |
-| `referred_by` | optional, ≤ 160 |
-| `message` | optional, ≤ 1,000 |
-| `source_page` | optional path the form was on; `referrer` (full URL, reduced to a host or site path before storing); `utm{source, medium, campaign}` |
+| `contact_method` | optional, "Preferred follow-up": `phone` · `email` · `either` |
+| `patient_status` | optional: `new` · `existing` · `not_sure` |
+| `topic` | optional (default `spravato`): `spravato` · `eligibility` · `first_visit` · `insurance` · `question` |
+| `best_time` | optional: `morning` · `afternoon` · `early_evening` · `no_preference` |
+| `insurance` | optional, ≤ 120, "Insurance provider" (**encrypted**) |
+| `message` | optional, ≤ 1,000 (**encrypted**) |
+| `emergency_acknowledged` | required, accepted: "I understand this form is not an emergency service." |
+| `cta` | optional, ≤ 80, letters and punctuation: the label of the button that opened the dialog |
+| `source_page` | optional path the dialog was on; `referrer` (full URL, reduced to a host or site path before storing); `utm{source, medium, campaign}` |
 | `turnstile_token` | required when `TURNSTILE_SECRET_KEY` is set |
 | `website` | honeypot: must stay empty |
 
 201 → `{ reference }` only. A filled honeypot gets the same 201 with `reference: null` and stores nothing. The same phone number within 10 minutes returns the first request's reference. 422 messages are written for the patient. Headers `X-Uptms-Site-Token` (= `FRONTEND_SITE_TOKEN`) + `X-Uptms-Client-Ip` / `X-Uptms-Client-Agent` let the Next.js server pass on the visitor's address; without a valid token they are ignored.
-
-The Contact page's `consultation` block, and a `hero` block with `primary_opens_form` on (its button opens the form in a popup), get `sources.form = {accepting, topics[{value, label}], best_times[], prior_treatments[], contact_methods[]}` and `sources.insurers` (the insurance partners); when the module is disabled `form` is null and the site shows the phone number (or the hero's link) instead.
 
 ### Consultation requests (`/api/v1/admin`, Figma 03–05)
 
@@ -258,8 +257,8 @@ Without `consultations.view_all` every list, count and lookup covers only the re
 
 | Method & path | Permission | Notes |
 | --- | --- | --- |
-| `GET consultation-requests?search=&filter[status]=new\|contacted\|scheduled\|closed\|spam\|overdue&filter[topic]&filter[assigned_to]=me\|unassigned\|<id>&filter[received]=7\|30\|90&sort=received_at\|follow_up_at (- for desc)&per_page` | consultations.view | Rows carry masked `contact` ("Daniel R. · (253) •••-0198"), `topic{value,label}`, `origin` (form · quiz), `status`, `is_overdue`, `waiting_minutes` (new only), `assigned_to{id,name,initials}`, `follow_up_at`, `allowed_statuses[]`. `meta.counts{all,new,contacted,scheduled,closed,spam}`, `meta.topics`, `meta.assignees` (view_all only), `meta.can{update,assign,export,delete}`. Search matches the reference, a whole name word, the full phone number, its last four digits or the email |
-| `GET consultation-requests/{id}` | consultations.view | Decrypted `name, phone, phone_href, email, message, referred_by, best_time, insurance, prior_treatment, contact_method, quiz` (self-check scores, answers and feedback, docs/QUIZ.md), `source{page, previous_page, first_touch, utm, device}`, `privacy{view_count, deletes_on, retention_days}`, `notes[]`, `activity[]`. **Audited** on every call |
+| `GET consultation-requests?search=&filter[status]=new\|contacted\|scheduled\|closed\|spam\|overdue&filter[topic]&filter[assigned_to]=me\|unassigned\|<id>&filter[received]=7\|30\|90&sort=received_at\|follow_up_at (- for desc)&per_page` | consultations.view | Rows carry masked `contact` ("Daniel R. · (253) •••-0198"), `topic{value,label}`, `cta`, `origin` (form), `status`, `is_overdue`, `waiting_minutes` (new only), `assigned_to{id,name,initials}`, `follow_up_at`, `allowed_statuses[]`. `meta.counts{all,new,contacted,scheduled,closed,spam}`, `meta.topics`, `meta.assignees` (view_all only), `meta.can{update,assign,export,delete}`. Search matches the reference, a whole name word, the full phone number, its last four digits or the email |
+| `GET consultation-requests/{id}` | consultations.view | Decrypted `name, phone, phone_href, email, message, insurance`, plus `best_time, contact_method, patient_status` (`{value, label}` or null), `emergency_acknowledged`, `source{page, cta, previous_page, first_touch, utm, device}`, `privacy{view_count, deletes_on, retention_days}`, `notes[]`, `activity[]`. **Audited** on every call |
 | `PATCH consultation-requests/{id}` `{status?, assigned_to?, follow_up_at?}` | consultations.update (+ view_all for `assigned_to`) | Status moves only along `ConsultationStatus::allowedTransitions()`, else `INVALID_STATE_TRANSITION`. The assignee must be active staff with consultations.view. Returns the detail without logging another view |
 | `POST consultation-requests/{id}/notes` `{body ≤ 1000}` | consultations.update | Returns the detail |
 | `POST consultation-requests/bulk` `{action: assign\|contacted\|spam, ids[≤100], assigned_to?}` | consultations.update (+ view_all to assign) | `{updated, skipped}`; requests that can't move are skipped |
@@ -270,7 +269,7 @@ Without `consultations.view_all` every list, count and lookup covers only the re
 
 Status workflow: new → contacted · scheduled · closed · spam; contacted → new (undo) · scheduled · closed · spam; scheduled → contacted · closed; closed → contacted · scheduled (re-open); spam → new. "Overdue" is not a status: a new request past `follow_up_at`, which is set to closing time of the next business day (office hours and closures from Clinic settings).
 
-Staff alert: `ConsultationRequestSubmitted` → queued `SendStaffAlert` mails Clinic settings → Privacy → staff notification email, then records `consultation.alert_sent` with `{details: true|false}`. The mail always carries the reference and a link to the request; while Privacy → "Include the request in the alert" is on (the default), `StaffAlertDetails` adds the person's name, phone, email, preferred contact, best time, topic, insurance, prior treatment, referrer, self-check scores and message — health information, so the mail provider needs a BAA (docs/SETUP.md). Turn the switch off for a link-only alert. An empty notification email sends no alert.
+Staff alert: `ConsultationRequestSubmitted` → queued `SendStaffAlert` mails Clinic settings → Privacy → staff notification email, then records `consultation.alert_sent` with `{details: true|false}`. The mail always carries the reference and a link to the request; while Privacy → "Include the request in the alert" is on (the default), `StaffAlertDetails` adds the person's name, phone, email, preferred follow-up, best time, patient status, topic, insurance provider and message — health information, so the mail provider needs a BAA (docs/SETUP.md). Turn the switch off for a link-only alert. An empty notification email sends no alert.
 
 Patient receipt: the same event → queued `SendPatientConfirmation` mails the address on the request with the reference, the clinic's phone, office hours and the crisis line — never the name, answers, topic or self-check results — then records `consultation.confirmation_sent`. A request without an email address (or a duplicate within the window, which raises no event) gets none.
 
@@ -287,7 +286,7 @@ Read endpoints are cached in `PublicCache` (flushed by `ContentPublished`) unles
 | `GET posts?category=<slug>&page=` | `{posts[{slug, path, title, dek, category{id, name, slug}, cover, reading_minutes, published_at}], page, last_page, total, category}`, 12 per page, newest first, from each post's published revision |
 | `GET posts/{slug}` | The card fields + `body` (rich-text tree; image nodes gain `attrs.image`), `tags[]`, `author{name, credentials}`, `review{by{name, credentials}, at}` (health posts with a recorded review), `updated_at`, `related[3]` (same category first), `seo`, `preview: false`. `?preview=<token>` returns the working copy for a valid signed token, uncached, with `robots` noindex/nofollow and no `related`; a bad token is `NOT_FOUND` |
 | `GET post-categories` | `[{name, slug, description, posts}]`: only categories with at least one live post |
-| `GET seo` | `{site_name, separator, x_handle, verification{google?, bing?}, tag_manager}` for the root layout. `tag_manager` is `{id, exclude_paths[]}` when Google Tag Manager is switched on with a container id, otherwise `null`; the site must not load the container on `exclude_paths` (`/contact`, `/quiz` while the exclusion is on) |
+| `GET seo` | `{site_name, separator, x_handle, verification{google?, bing?}, tag_manager}` for the root layout. `tag_manager` is `{id, exclude_paths[]}` when Google Tag Manager is switched on with a container id, otherwise `null`; the site must not load the container on `exclude_paths` (`/`, the page with the consultation dialog, while the exclusion is on) |
 | `GET sitemap` | `[{path, type, lastmod, priority, images[{url, alt}]}]`: published pages, conditions and posts (plus `/resources` when any post is listed), minus groups switched off in settings and subjects set to noindex or out of the sitemap |
 | `GET robots` | `{text, indexnow_key}`. The key is null unless `SEO_LIVE` and the IndexNow setting are both on; the site serves it at `/indexnow-key.txt`. It is derived from `APP_KEY` (a key stored by an earlier version wins), so reading never writes |
 | `GET redirects` | `{rules[{id, from, to, status, wildcard}], paths[]}`: enabled rules, and every address the website serves (`/`, `/resources` and all published subjects) so the proxy can answer real 404s |
@@ -297,6 +296,8 @@ Read endpoints are cached in `PublicCache` (flushed by `ContentPublished`) unles
 `hit` and `not-found` are refused (`FORBIDDEN`) unless the call carries a valid `X-Uptms-Site-Token`. In production they are refused while `FRONTEND_SITE_TOKEN` is unset; elsewhere they stay open until a token is configured.
 
 `GET page` (and its preview) and `GET conditions/{slug}` now carry the same `seo` object as posts: `{title, description, canonical, robots{index, follow, max_image_preview, max_snippet}, open_graph{type, title, description, url, site_name, image, published_time, modified_time}, twitter{card, site}, json_ld}`. Previews always get noindex/nofollow.
+
+`json_ld` is a list of nodes (the website wraps it in `{"@context": "https://schema.org", "@graph": …}`): the clinic (`MedicalClinic` or the type in SEO settings, from Clinic settings), `WebSite`, the page (`schema_type`, default by template: Landing → `MedicalWebPage`, with `about` = `schema_about` as a `MedicalCondition`), `BreadcrumbList`, `FAQPage` from the FAQ block's published questions marked `in_schema`, one `Person` per team member a block shows (`["Person", "IndividualPhysician"]` when the member's schema type is Physician; schema.org's `Physician` alone is an organization), then the page's `schema_custom` nodes. Pieces turned off in `schema_disabled` are left out. The seeded `/` adds a `Drug` node for SPRAVATO® (esketamine) through `schema_custom`; the seeded TMS, Contact and Privacy pages are noindex and out of the sitemap, so the sitemap lists `/` only.
 
 ### Posts (`/api/v1/admin`, Figma 11–12)
 

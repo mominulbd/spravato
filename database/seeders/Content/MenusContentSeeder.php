@@ -78,17 +78,20 @@ class MenusContentSeeder extends Seeder
         }
     }
 
-    /** @return list<array{label: string, type: string, url: string}> */
+    /**
+     * Document items keep the media id, so the footer follows a replaced PDF.
+     *
+     * @return list<array{label: string, type: string, media_id: int}>
+     */
     private function documents(): array
     {
         $items = [];
 
         foreach (SiteMediaSeeder::DOCUMENTS as $file => [, $title]) {
-            $media = Media::query()->where('original_name', $file)->first();
-            $path = $media instanceof Media ? parse_url($media->url(), PHP_URL_PATH) : null;
+            $id = Media::query()->where('original_name', $file)->where('kind', Media::DOCUMENT)->value('id');
 
-            if (is_string($path)) {
-                $items[] = ['label' => $title, 'type' => 'link', 'url' => $path];
+            if (is_numeric($id)) {
+                $items[] = ['label' => $title, 'type' => 'document', 'media_id' => (int) $id];
             }
         }
 

@@ -7,6 +7,7 @@ namespace Uptms\Menus\Http\Controllers\Admin;
 use App\Support\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Uptms\Media\Rules\PlaceableMedia;
 use Uptms\Menus\Models\Menu;
 use Uptms\Menus\Services\MenuTree;
 
@@ -40,8 +41,10 @@ class MenuController
 
         $item = fn (string $prefix): array => [
             "{$prefix}.label" => ['required', 'string', 'max:80'],
-            "{$prefix}.type" => ['required', 'in:page,anchor,link'],
+            "{$prefix}.type" => ['required', 'in:page,anchor,link,document'],
             "{$prefix}.page_id" => ['nullable', 'required_if:'.$prefix.'.type,page,anchor', 'integer'],
+            // An official document from the media library (PDF): stored by id, its address resolved when served.
+            "{$prefix}.media_id" => ['nullable', 'required_if:'.$prefix.'.type,document', 'integer', new PlaceableMedia('document')],
             "{$prefix}.anchor" => ['nullable', 'required_if:'.$prefix.'.type,anchor', 'string', 'max:40', 'regex:/^[a-z0-9-]+$/'],
             "{$prefix}.url" => ['nullable', 'required_if:'.$prefix.'.type,link', 'string', 'max:190', 'regex:'.MenuTree::SAFE_URL],
             "{$prefix}.is_visible" => ['sometimes', 'boolean'],

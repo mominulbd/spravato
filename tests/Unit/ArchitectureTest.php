@@ -75,6 +75,11 @@ arch('menus use pages only through the page directory')
     ->expect('Uptms\Menus')
     ->not->toUse(['Uptms\Pages\Models', 'Uptms\Collections']);
 
+// Document links (menus, page links) hold a media id and resolve it through MediaPresenter.
+arch('menus and pages reach media only through its services and rules')
+    ->expect(['Uptms\Menus', 'Uptms\Pages\Blocks', 'Uptms\Pages\Services'])
+    ->not->toUse('Uptms\Media\Models');
+
 // Phase 3: consultations sit above users, settings and publishing.
 arch('lower modules know nothing of consultations')
     ->expect(['Uptms\AuditLog', 'Uptms\Permissions', 'Uptms\Users', 'Uptms\Auth', 'Uptms\Publishing', 'Uptms\Media', 'Uptms\Settings', 'Uptms\Collections', 'Uptms\Pages', 'Uptms\Menus'])

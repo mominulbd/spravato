@@ -34,7 +34,57 @@ export interface PublicPage {
   title: string;
   path: string;
   blocks: Block[];
-  seo: { title?: string; description?: string } & Record<string, unknown>;
+  seo: PageSeo;
+}
+
+/** Share image for Open Graph / X (SeoPresenter::shareImage). */
+export interface SeoImage {
+  url: string;
+  width: number | null;
+  height: number | null;
+  alt: string;
+}
+
+/** A schema.org node of the page's JSON-LD `@graph` (SchemaGraph::build). */
+export type JsonLdNode = { "@type"?: string | string[]; "@id"?: string } & Record<string, unknown>;
+
+/** `page.seo` of the public page endpoint (SeoPresenter::public). */
+export interface PageSeo {
+  title: string;
+  description: string;
+  canonical: string;
+  robots: {
+    index: boolean;
+    follow: boolean;
+    max_image_preview: "none" | "standard" | "large" | null;
+    max_snippet: number | null;
+  };
+  open_graph: {
+    type: "website" | "article";
+    title: string;
+    description: string;
+    url: string;
+    site_name: string;
+    image: SeoImage | null;
+    published_time: string | null;
+    modified_time: string | null;
+  };
+  twitter: {
+    card: "summary" | "summary_large_image" | null;
+    site: string | null;
+  };
+  json_ld: JsonLdNode[];
+}
+
+/** `GET /api/v1/public/seo`: site-wide head values (Public\SeoController::site). */
+export interface SiteSeo {
+  site_name: string;
+  separator: string;
+  x_handle: string | null;
+  /** PHP's array_filter of an empty map arrives as `[]`. */
+  verification: { google?: string; bing?: string } | [];
+  /** Null while analytics are off. The site never renders it on `/` (SENSITIVE_PATHS). */
+  tag_manager: { id: string; exclude_paths: string[] } | null;
 }
 
 export interface Settings {
