@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Uptms\Consultations\Domain\Enums\ConsultationStatus;
 use Uptms\Consultations\Domain\Enums\ConsultationTopic;
 use Uptms\Consultations\Domain\Enums\ContactMethod;
-use Uptms\Consultations\Domain\Enums\PriorTreatment;
+use Uptms\Consultations\Domain\Enums\PatientStatus;
 use Uptms\Consultations\Models\ConsultationRequest;
 use Uptms\Consultations\Services\BlindIndex;
 
@@ -29,10 +29,12 @@ class ConsultationRequestFactory extends Factory
             'email' => fake()->boolean(70) ? fake()->safeEmail() : null,
             'message' => fake()->boolean(60) ? 'I would like to understand the evaluation and whether my insurance covers it.' : null,
             'topic' => fake()->randomElement(ConsultationTopic::cases()),
-            'insurance' => fake()->randomElement(['Premera Blue Cross', 'Regence BlueShield', 'Molina Healthcare', 'Other']),
-            'prior_treatment' => fake()->randomElement(PriorTreatment::cases())->value,
+            'insurance' => fake()->boolean(60) ? fake()->randomElement(['Premera Blue Cross', 'Regence BlueShield', 'Molina Healthcare']) : null,
             'contact_method' => fake()->randomElement(ContactMethod::cases()),
-            'source_page' => '/contact',
+            'patient_status' => fake()->randomElement(PatientStatus::cases()),
+            'emergency_acknowledged' => true,
+            'cta' => 'Request a consultation',
+            'source_page' => '/',
             'device' => 'Mobile · Safari',
         ];
     }

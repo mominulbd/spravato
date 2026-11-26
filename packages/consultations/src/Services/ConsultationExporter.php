@@ -20,8 +20,8 @@ final readonly class ConsultationExporter
     public const int MAX_ROWS = 50000;
 
     private const array HEADER = [
-        'Reference', 'Received', 'Status', 'Topic', 'Name', 'Phone', 'Email', 'Insurance', 'Tried therapy / antidepressants',
-        'Preferred contact', 'Best time to call', 'Referred by', 'Origin',
+        'Reference', 'Received', 'Status', 'Topic', 'Name', 'Phone', 'Email', 'Insurance provider', 'Patient status',
+        'Preferred follow-up', 'Best time to reach', 'Not-an-emergency acknowledged', 'Button', 'Origin',
         'Message', 'Assigned to', 'Follow-up by', 'Contacted', 'Scheduled', 'Closed', 'Page',
     ];
 
@@ -57,10 +57,11 @@ final readonly class ConsultationExporter
                         $request->phone,
                         $request->email,
                         $request->insurance,
-                        ConsultationPresenter::priorTreatment($request->prior_treatment)['label'] ?? '',
+                        $request->patient_status?->label(),
                         $request->contact_method?->label(),
                         $request->best_time?->label(),
-                        $request->referred_by,
+                        $request->emergency_acknowledged ? 'Yes' : 'No',
+                        $request->cta,
                         $request->origin->label(),
                         $request->message,
                         $request->assigned_to === null ? '' : ($names[$request->assigned_to]['name'] ?? ''),

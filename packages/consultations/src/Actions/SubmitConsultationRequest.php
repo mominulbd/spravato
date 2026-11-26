@@ -16,7 +16,7 @@ use Uptms\Consultations\Services\FollowUpClock;
 use Uptms\Consultations\Services\SourceDescriber;
 
 /**
- * Stores a request from the website's consultation form, sets its call-back
+ * Stores a request from the website's consultation dialog, sets its call-back
  * target and alerts staff (without any of the person's details).
  */
 final readonly class SubmitConsultationRequest
@@ -29,11 +29,10 @@ final readonly class SubmitConsultationRequest
     ) {}
 
     /**
-     * @param  array{first_name: string, last_name: string, phone: string, email?: string|null, insurance?: string|null, prior_treatment?: string|null, contact_method?: string|null, topic?: string|null, best_time?: string|null, referred_by?: string|null, message?: string|null, source_page?: string|null, referrer?: string|null, utm?: array<string, string|null>|null}  $data
+     * @param  array{first_name: string, last_name: string, phone: string, email?: string|null, insurance?: string|null, contact_method?: string|null, patient_status?: string|null, topic?: string|null, best_time?: string|null, message?: string|null, emergency_acknowledged?: mixed, cta?: string|null, source_page?: string|null, referrer?: string|null, utm?: array<string, string|null>|null}  $data
      */
     public function execute(array $data, ?string $userAgent): ConsultationRequest
     {
-
         $phoneHash = $this->index->phoneHash($data['phone']);
 
         // A double submit (or a second tap after a slow network) returns the
@@ -60,12 +59,13 @@ final readonly class SubmitConsultationRequest
                 'phone' => trim($data['phone']),
                 'email' => $this->blankToNull($data['email'] ?? null),
                 'insurance' => $this->blankToNull($data['insurance'] ?? null),
-                'prior_treatment' => $data['prior_treatment'] ?? null,
-                'contact_method' => $data['contact_method'] ?? null,
+                'contact_method' => $this->blankToNull($data['contact_method'] ?? null),
+                'patient_status' => $this->blankToNull($data['patient_status'] ?? null),
+                'emergency_acknowledged' => true,
                 'message' => $this->blankToNull($data['message'] ?? null),
-                'referred_by' => $this->blankToNull($data['referred_by'] ?? null),
-                'topic' => $this->blankToNull($data['topic'] ?? null) ?? ConsultationTopic::TmsDepression->value,
+                'topic' => $this->blankToNull($data['topic'] ?? null) ?? ConsultationTopic::Spravato->value,
                 'best_time' => $this->blankToNull($data['best_time'] ?? null),
+                'cta' => $this->blankToNull($data['cta'] ?? null),
                 'source_page' => $this->blankToNull($data['source_page'] ?? null),
                 'previous_page' => $this->describer->previousPage($referrer, $siteHost),
                 'referrer_host' => $this->describer->referrerHost($referrer, $siteHost),
@@ -82,7 +82,7 @@ final readonly class SubmitConsultationRequest
             $request->reference = sprintf('CR-%s-%04d', $request->created_at->format('Y'), $request->id);
             $request->save();
 
-            $this->audit->record('consultation.submitted', $request, null, ['source_page' => $request->source_page, 'origin' => $request->origin->value]);
+            $this->audit->record('consultation.submitted', $request, null, ['source_page' => $request->source_page, 'cta' => $request->cta, 'origin' => $request->origin->value]);
 
             return $request;
         });

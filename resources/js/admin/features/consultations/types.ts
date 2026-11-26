@@ -26,6 +26,8 @@ export interface ConsultationRow {
     scheduled_at: string | null;
     closed_at: string | null;
     source_page: string | null;
+    /** Label of the website button that opened the dialog. */
+    cta: string | null;
     origin: 'form';
     allowed_statuses: ConsultationStatus[];
     /** Masked: "Daniel R. · (253) •••-0198". */
@@ -47,19 +49,19 @@ export interface ConsultationNote {
     created_at: string;
 }
 
-/** The self-check answers and server-computed scores (docs/QUIZ.md "Admin"). */
+/** The decrypted request, as the detail screen (Figma 05) shows it. */
 export interface ConsultationDetail extends Omit<ConsultationRow, 'contact'> {
     name: string;
     phone: string;
     phone_href: string;
     email: string | null;
     message: string | null;
-    referred_by: string | null;
     best_time: Option | null;
     insurance: string | null;
-    prior_treatment: Option | null;
     contact_method: Option | null;
-    source: { page: string | null; previous_page: string | null; first_touch: string; utm: Record<string, string> | null; device: string | null };
+    patient_status: Option | null;
+    emergency_acknowledged: boolean;
+    source: { page: string | null; cta: string | null; previous_page: string | null; first_touch: string; utm: Record<string, string> | null; device: string | null };
     privacy: { view_count: number; deletes_on: string; retention_days: number };
     notes: ConsultationNote[];
     activity: ConsultationActivity[];

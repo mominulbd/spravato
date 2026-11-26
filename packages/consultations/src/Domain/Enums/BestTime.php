@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Uptms\Consultations\Domain\Enums;
 
-/** "Best time to call" on the Contact form (optional). */
+/** "Best time to reach you" in the consultation dialog. */
 enum BestTime: string
 {
-    case Anytime = 'anytime';
-    case Mornings = 'mornings';
-    case Afternoons = 'afternoons';
+    case Morning = 'morning';
+    case Afternoon = 'afternoon';
+    case EarlyEvening = 'early_evening';
+    case NoPreference = 'no_preference';
 
     public function label(): string
     {
         return match ($this) {
-            self::Anytime => 'Any time during office hours',
-            self::Mornings => 'Weekday mornings',
-            self::Afternoons => 'Weekday afternoons',
+            self::Morning => 'Morning',
+            self::Afternoon => 'Afternoon',
+            self::EarlyEvening => 'Early evening',
+            self::NoPreference => 'No preference',
         };
     }
 

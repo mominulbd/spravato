@@ -4,31 +4,40 @@ declare(strict_types=1);
 
 namespace Uptms\Consultations\Domain\Enums;
 
-/** "How can we help?" on the Contact form. Stored as the value, shown as the label. */
+/**
+ * "What would you like to discuss?" in the Spravato consultation dialog.
+ * Every consultation button on the page opens the dialog with one of these
+ * chosen (`#consultation?topic=insurance`). Stored as the value.
+ */
 enum ConsultationTopic: string
 {
-    case TmsDepression = 'tms_depression';
+    case Spravato = 'spravato';
+    case Eligibility = 'eligibility';
+    case FirstVisit = 'first_visit';
     case Insurance = 'insurance';
-    case OcdSpecialty = 'ocd_specialty';
-    case LovedOne = 'loved_one';
-    case ProviderReferral = 'provider_referral';
+    case Question = 'question';
 
-    /** On the website form. */
+    /** In the dialog. */
     public function label(): string
     {
         return match ($this) {
-            self::TmsDepression => 'TMS for depression',
-            self::Insurance => 'Insurance & coverage',
-            self::OcdSpecialty => 'Deep TMS for OCD / specialty care',
-            self::LovedOne => 'Care for a loved one',
-            self::ProviderReferral => 'Provider referral',
+            self::Spravato => 'Spravato consultation',
+            self::Eligibility => 'Whether Spravato is right for me',
+            self::FirstVisit => 'What a treatment visit involves',
+            self::Insurance => 'Insurance & cost',
+            self::Question => 'A question for the team',
         };
     }
 
     /** In the admin's tables and charts. */
     public function shortLabel(): string
     {
-        return $this === self::OcdSpecialty ? 'Deep TMS for OCD' : $this->label();
+        return match ($this) {
+            self::Eligibility => 'Eligibility',
+            self::FirstVisit => 'Treatment visits',
+            self::Question => 'General question',
+            default => $this->label(),
+        };
     }
 
     /** @return list<array{value: string, label: string}> */

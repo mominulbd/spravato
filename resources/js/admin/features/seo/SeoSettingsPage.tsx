@@ -89,7 +89,7 @@ function Form({ group, data }: { group: Group; data: SettingsPayload }) {
     const clinic = data.clinic;
     const tagsOn = bool('gtm_enabled') && text('gtm_container_id') !== '';
     const tagsOnSensitive = tagsOn && !bool('gtm_exclude_sensitive');
-    const sensitive = data.sensitive_paths.join(' and ');
+    const sensitive = data.sensitive_paths.map((path) => (path === '/' ? 'the Spravato page (/)' : path)).join(' and ');
 
     return (
         <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -211,7 +211,7 @@ function Form({ group, data }: { group: Group; data: SettingsPayload }) {
                         />
                         <Toggle
                             label={`Keep tags off ${sensitive}`}
-                            description={`No container is loaded on ${sensitive}, so nothing a patient types into the consultation form or answers in the self-check can reach Google. Required unless your Tag Manager vendors are covered by a BAA.`}
+                            description={`No container is loaded on ${sensitive}, so nothing a patient types into the consultation dialog can reach Google. Required unless your Tag Manager vendors are covered by a BAA.`}
                             checked={bool('gtm_exclude_sensitive')}
                             onChange={(event) => set('gtm_exclude_sensitive', event.target.checked)}
                         />
@@ -252,12 +252,12 @@ function Form({ group, data }: { group: Group; data: SettingsPayload }) {
                 {tagsOnSensitive ? (
                     <p className="flex items-start gap-2.5 rounded-card bg-warning-soft px-4 py-3.5 text-admin-small text-warning">
                         <TriangleAlert className="mt-px size-4 shrink-0" aria-hidden="true" />
-                        Health-privacy rule: tags must not load on pages with forms or the self-check. Tag Manager is currently allowed on {sensitive}.
+                        Health-privacy rule: tags must not load where a patient can type health details. Tag Manager is currently allowed on {sensitive}.
                     </p>
                 ) : (
                     <p className="flex items-start gap-2.5 rounded-card bg-sky-soft px-4 py-3.5 text-admin-small text-ink">
                         <ShieldCheck className="mt-px size-4 shrink-0 text-royal" aria-hidden="true" />
-                        Health-privacy rule: {tagsOn ? `Tag Manager loads on the website but never on ${sensitive}, so no answer or contact detail reaches Google.` : 'the website loads no analytics or ad pixels, and never on pages with forms or the self-check.'}
+                        Health-privacy rule: {tagsOn ? `Tag Manager loads on the website but never on ${sensitive}, so no answer or contact detail reaches Google.` : 'the website loads no analytics or ad pixels, and never on the page with the consultation dialog.'}
                     </p>
                 )}
             </div>

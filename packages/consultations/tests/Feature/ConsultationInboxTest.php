@@ -180,8 +180,8 @@ it('exports a formula-safe CSV for admins and records the export', function () {
 it('summarises the queue for the dashboard within the viewer\'s scope', function () {
     $staff = staffUser('staff');
     consultation(['topic' => 'insurance'], assignedTo: $staff->id);
-    ConsultationRequest::factory()->status(ConsultationStatus::New)->receivedAt(now()->subDays(2))->create(['topic' => 'tms_depression']);
-    consultation(['topic' => 'tms_depression'], ConsultationStatus::Closed);
+    ConsultationRequest::factory()->status(ConsultationStatus::New)->receivedAt(now()->subDays(2))->create(['topic' => 'spravato']);
+    consultation(['topic' => 'spravato'], ConsultationStatus::Closed);
 
     asAdmin(staffUser('manager'))->getJson('/api/v1/admin/consultation-requests/overview?range=7')->assertOk()
         ->assertJsonPath('data.queue.waiting', 2)
@@ -189,7 +189,7 @@ it('summarises the queue for the dashboard within the viewer\'s scope', function
         ->assertJsonPath('data.queue.overdue', 1)
         ->assertJsonPath('data.queue.longest.0.is_overdue', true)
         ->assertJsonPath('data.new_requests.count', 3)
-        ->assertJsonPath('data.topics.0.value', 'tms_depression')
+        ->assertJsonPath('data.topics.0.value', 'spravato')
         ->assertJsonPath('data.topics.0.percent', 67)
         ->assertJsonCount(7, 'data.daily')
         ->assertJsonCount(3, 'data.recent');

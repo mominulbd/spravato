@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Uptms\Consultations\Services;
 
-use Uptms\Consultations\Domain\Enums\PriorTreatment;
 use Uptms\Consultations\Models\ConsultationRequest;
 
 /**
@@ -24,22 +23,16 @@ final readonly class StaffAlertDetails
      */
     public function lines(ConsultationRequest $request): array
     {
-        $treatment = $request->prior_treatment === null ? null : PriorTreatment::tryFrom($request->prior_treatment);
-
         $lines = [
             'Name: '.$request->name,
             'Phone: '.$request->phone,
             'Email: '.($request->email ?? self::MISSING),
-            'Preferred contact: '.($request->contact_method?->label() ?? self::MISSING),
-            'Best time to call: '.($request->best_time?->label() ?? self::MISSING),
+            'Preferred follow-up: '.($request->contact_method?->label() ?? self::MISSING),
+            'Best time to reach: '.($request->best_time?->label() ?? self::MISSING),
+            'Patient status: '.($request->patient_status?->label() ?? self::MISSING),
             'Asking about: '.$request->topic->shortLabel(),
-            'Insurance: '.($request->insurance ?? self::MISSING),
-            'Therapy or antidepressants tried: '.($treatment?->label() ?? self::MISSING),
+            'Insurance provider: '.($request->insurance ?? self::MISSING),
         ];
-
-        if ($request->referred_by !== null) {
-            $lines[] = 'Referred by: '.$request->referred_by;
-        }
 
         if ($request->message !== null) {
             $lines[] = 'Message: '.$request->message;

@@ -189,11 +189,11 @@ function Detail({ request }: { request: ConsultationDetail }) {
     );
 }
 
-/** "Received Monday, Oct 6 at 2:05 PM from the Contact page · waiting 2 days 1 hour" */
+/** "Received Monday, Oct 6 at 2:05 PM from the Spravato page · waiting 2 days 1 hour" */
 function receivedLine(request: ConsultationDetail): string {
     const received = new Date(request.received_at);
     const when = `${received.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} at ${received.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-    const page = request.source.page === '/contact' ? 'the Contact page' : request.source.page;
+    const page = request.source.page === '/' ? 'the Spravato page' : request.source.page;
     const waiting = request.waiting_minutes !== null ? ` · waiting ${waitingLabel(request.waiting_minutes).replace(' d', ' days').replace(' h', ' hours').replace(' min', ' minutes').replace(/\b1 (day|hour|minute)s/g, '1 $1')}` : '';
 
     return `Received ${when}${page ? ` from ${page}` : ''}${waiting}`;
@@ -246,11 +246,10 @@ function ContactCard({ request }: { request: ConsultationDetail }) {
                 <Fact label="Phone">{request.phone}</Fact>
                 <Fact label="Email">{request.email ?? <span className="font-normal text-ink-soft">Not given</span>}</Fact>
                 <Fact label="Topic">{request.topic.label}</Fact>
-                {request.insurance && <Fact label="Insurance">{request.insurance}</Fact>}
-                {request.prior_treatment && <Fact label="Tried therapy / antidepressants">{request.prior_treatment.label}</Fact>}
-                {request.contact_method && <Fact label="Preferred contact">{request.contact_method.label}</Fact>}
-                <Fact label="Best time to call">{request.best_time?.label ?? <span className="font-normal text-ink-soft">Any time</span>}</Fact>
-                {request.referred_by && <Fact label="Referred by">{request.referred_by}</Fact>}
+                <Fact label="Patient status">{request.patient_status?.label ?? <span className="font-normal text-ink-soft">Not given</span>}</Fact>
+                <Fact label="Preferred follow-up">{request.contact_method?.label ?? <span className="font-normal text-ink-soft">Not given</span>}</Fact>
+                <Fact label="Best time to reach">{request.best_time?.label ?? <span className="font-normal text-ink-soft">No preference</span>}</Fact>
+                <Fact label="Insurance provider">{request.insurance ?? <span className="font-normal text-ink-soft">Not given</span>}</Fact>
             </dl>
             <div className="flex flex-col gap-2 rounded-[16px] bg-paper p-5">
                 <p className="font-display text-[10px] leading-[1.3] font-bold tracking-[1.1px] text-ink-soft uppercase">Message</p>
@@ -419,6 +418,8 @@ function AssigneeSelect({ request, disabled, onChange }: { request: Consultation
 function SourceCard({ request }: { request: ConsultationDetail }) {
     const rows: [string, string | null][] = [
         ['Page', request.source.page],
+        ['Button', request.source.cta],
+        ['Not an emergency', request.emergency_acknowledged ? 'Acknowledged' : null],
         ['First visit', request.source.first_touch],
         ['Previous page', request.source.previous_page],
         ['Device', request.source.device],

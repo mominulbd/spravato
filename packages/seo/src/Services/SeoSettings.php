@@ -25,13 +25,14 @@ class SeoSettings
     public const string DEFAULT_ROBOTS = "User-agent: *\nDisallow: /admin\nDisallow: /api/\nDisallow: /preview\nDisallow: /*?preview=\n";
 
     /**
-     * Pages a visitor reaches only to describe a health problem. HHS online-tracking
+     * Pages where a visitor can describe a health problem. HHS online-tracking
      * guidance treats a tag firing there as a disclosure, so the website is told to
-     * leave the container off them while `gtm_exclude_sensitive` is on.
+     * leave the container off them while `gtm_exclude_sensitive` is on. The
+     * consultation dialog is a pop-up on the Spravato page, so that page is `/`.
      *
      * @var list<string>
      */
-    public const array SENSITIVE_PATHS = ['/contact'];
+    public const array SENSITIVE_PATHS = ['/'];
 
     public function __construct(private readonly AuditRecorder $audit) {}
 

@@ -61,17 +61,17 @@ it('spells a request out for the staff alert and says so when an answer is missi
         'name' => 'Daniel Reyes',
         'phone' => '(253) 555-0198',
         'insurance' => 'Premera Blue Cross',
-        'topic' => ConsultationTopic::OcdSpecialty->value,
+        'topic' => ConsultationTopic::FirstVisit->value,
     ]);
 
     expect((new StaffAlertDetails)->lines($request))->toBe([
         'Name: Daniel Reyes',
         'Phone: (253) 555-0198',
         'Email: Not given',
-        'Preferred contact: Not given',
-        'Best time to call: Not given',
-        'Asking about: Deep TMS for OCD',
-        'Insurance: Premera Blue Cross',
-        'Therapy or antidepressants tried: Not given',
+        'Preferred follow-up: Not given',
+        'Best time to reach: Not given',
+        'Patient status: Not given',
+        'Asking about: Treatment visits',
+        'Insurance provider: Premera Blue Cross',
     ]);
 });

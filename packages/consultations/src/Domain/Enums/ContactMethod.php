@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Uptms\Consultations\Domain\Enums;
 
-/** "Preferred method of communication" on the qualification form. */
+/** "Preferred follow-up" in the consultation dialog (optional). */
 enum ContactMethod: string
 {
     case Phone = 'phone';
-    case Text = 'text';
     case Email = 'email';
+    case Either = 'either';
 
     public function label(): string
     {
         return match ($this) {
-            self::Phone => 'Phone call',
-            self::Text => 'Text message',
+            self::Phone => 'Phone',
             self::Email => 'Email',
+            self::Either => 'Either',
         };
     }
 

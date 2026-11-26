@@ -9,13 +9,12 @@ use Illuminate\Validation\Rule;
 use Uptms\Consultations\Domain\Enums\BestTime;
 use Uptms\Consultations\Domain\Enums\ConsultationTopic;
 use Uptms\Consultations\Domain\Enums\ContactMethod;
-use Uptms\Consultations\Domain\Enums\PriorTreatment;
+use Uptms\Consultations\Domain\Enums\PatientStatus;
 
 /**
- * The website's "Find out if you qualify for TMS" form (Contact page and
- * the Home hero's popup), posted by the Next.js server. Laravel is the
- * one validator; the site mirrors these rules for instant feedback. Error
- * messages speak to the patient.
+ * The Spravato consultation dialog (Figma "Consultation dialog"), posted by
+ * the Next.js server. Laravel is the one validator; the site mirrors these
+ * rules for instant feedback. Error messages speak to the patient.
  */
 class SubmitConsultationRequestRequest extends FormRequest
 {
@@ -38,14 +37,16 @@ class SubmitConsultationRequestRequest extends FormRequest
                 }
             }],
             'email' => ['required', 'string', 'email:rfc', 'max:190'],
-            'insurance' => ['required', 'string', 'max:120'],
-            'prior_treatment' => ['required', Rule::enum(PriorTreatment::class)],
-            'contact_method' => ['required', Rule::enum(ContactMethod::class)],
-            // Optional: a self-check result links here with its topic.
+            'contact_method' => ['nullable', Rule::enum(ContactMethod::class)],
+            'patient_status' => ['nullable', Rule::enum(PatientStatus::class)],
+            // Preselected by the button that opened the dialog; Spravato consultation when absent.
             'topic' => ['nullable', Rule::enum(ConsultationTopic::class)],
             'best_time' => ['nullable', Rule::enum(BestTime::class)],
-            'referred_by' => ['nullable', 'string', 'max:160'],
+            'insurance' => ['nullable', 'string', 'max:120'],
             'message' => ['nullable', 'string', 'max:1000'],
+            'emergency_acknowledged' => ['accepted'],
+            // The page's own button wording, so letters and punctuation only.
+            'cta' => ['nullable', 'string', 'max:80', 'regex:/^[\pL\pN\s&·,.\'’?!()\-–—→:®]+$/u'],
             'source_page' => ['nullable', 'string', 'max:190', 'regex:/^\/(?!\/)/'],
             'referrer' => ['nullable', 'string', 'max:2000'],
             'utm' => ['nullable', 'array:source,medium,campaign'],
@@ -68,18 +69,17 @@ class SubmitConsultationRequestRequest extends FormRequest
             'phone.regex' => 'Enter a 10-digit U.S. phone number, e.g. (253) 555-0142.',
             'phone.max' => 'Enter a 10-digit U.S. phone number, e.g. (253) 555-0142.',
             'email.required' => 'Enter an email address the clinic can reply to.',
-            'email.email' => 'Enter a valid email address, e.g. you@example.com.',
-            'email.max' => 'Enter a valid email address, e.g. you@example.com.',
-            'insurance.required' => 'Choose your insurance, or “Other” or “No insurance”.',
-            'insurance.max' => 'Keep the insurance name under 120 characters.',
-            'prior_treatment.required' => 'Tell us whether you have tried therapy or antidepressants.',
-            'prior_treatment.enum' => 'Choose an answer from the list.',
-            'contact_method.required' => 'Choose how you would like the clinic to reach you.',
-            'contact_method.enum' => 'Choose an answer from the list.',
-            'topic.enum' => 'Choose what you would like to talk about.',
+            'email.email' => 'Enter a valid email address, e.g. name@example.com.',
+            'email.max' => 'Enter a valid email address, e.g. name@example.com.',
+            'contact_method.enum' => 'Choose phone, email or either.',
+            'patient_status.enum' => 'Choose new, existing or not sure.',
+            'topic.enum' => 'Choose what you would like to discuss.',
             'best_time.enum' => 'Choose a time from the list.',
-            'referred_by.max' => 'Keep the referring provider under 160 characters.',
-            'message.max' => 'Keep your question under 1,000 characters.',
+            'insurance.max' => 'Keep the insurance provider under 120 characters.',
+            'message.max' => 'Keep your note under 1,000 characters.',
+            'emergency_acknowledged.accepted' => 'Please confirm you understand this form is not an emergency service.',
+            'cta.max' => 'Something went wrong. Please try again, or call the clinic.',
+            'cta.regex' => 'Something went wrong. Please try again, or call the clinic.',
         ];
     }
 

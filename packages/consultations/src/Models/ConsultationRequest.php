@@ -15,11 +15,12 @@ use Uptms\Consultations\Domain\Enums\ConsultationOrigin;
 use Uptms\Consultations\Domain\Enums\ConsultationStatus;
 use Uptms\Consultations\Domain\Enums\ConsultationTopic;
 use Uptms\Consultations\Domain\Enums\ContactMethod;
+use Uptms\Consultations\Domain\Enums\PatientStatus;
 use Uptms\Consultations\Factories\ConsultationRequestFactory;
 use Uptms\Permissions\Contracts\HasPermissions;
 
 /**
- * A request from the website's qualification form or self-check. The person's details are
+ * A request from the website's consultation dialog. The person's details are
  * encrypted at rest; nothing here is audited as a model diff, because the
  * audit log must never hold patient details. Actions record what happened.
  *
@@ -29,12 +30,13 @@ use Uptms\Permissions\Contracts\HasPermissions;
  * @property string $phone
  * @property string|null $email
  * @property string|null $message
- * @property string|null $referred_by
  * @property string|null $insurance
- * @property string|null $prior_treatment PriorTreatment value, encrypted
  * @property ContactMethod|null $contact_method
+ * @property PatientStatus|null $patient_status
+ * @property bool $emergency_acknowledged
  * @property ConsultationTopic $topic
  * @property ConsultationOrigin $origin
+ * @property string|null $cta label of the button that opened the dialog
  * @property BestTime|null $best_time
  * @property ConsultationStatus $status
  * @property int|null $assigned_to
@@ -59,15 +61,15 @@ class ConsultationRequest extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'phone', 'email', 'message', 'referred_by', 'insurance', 'prior_treatment', 'topic', 'best_time', 'contact_method',
-        'source_page', 'previous_page', 'referrer_host', 'utm', 'device',
+        'name', 'phone', 'email', 'message', 'insurance', 'topic', 'best_time', 'contact_method', 'patient_status',
+        'emergency_acknowledged', 'cta', 'source_page', 'previous_page', 'referrer_host', 'utm', 'device',
     ];
 
     /** @var array<string, mixed> */
     protected $attributes = ['origin' => 'form'];
 
     /** Never serialised by accident: presenters choose what leaves the API. */
-    protected $hidden = ['name', 'phone', 'email', 'message', 'referred_by', 'insurance', 'prior_treatment', 'phone_hash', 'search_index'];
+    protected $hidden = ['name', 'phone', 'email', 'message', 'insurance', 'phone_hash', 'search_index'];
 
     protected function casts(): array
     {
@@ -76,13 +78,13 @@ class ConsultationRequest extends Model
             'phone' => 'encrypted',
             'email' => 'encrypted',
             'message' => 'encrypted',
-            'referred_by' => 'encrypted',
             'insurance' => 'encrypted',
-            'prior_treatment' => 'encrypted',
             'origin' => ConsultationOrigin::class,
             'topic' => ConsultationTopic::class,
             'best_time' => BestTime::class,
             'contact_method' => ContactMethod::class,
+            'patient_status' => PatientStatus::class,
+            'emergency_acknowledged' => 'boolean',
             'status' => ConsultationStatus::class,
             'assigned_to' => 'integer',
             'utm' => 'array',

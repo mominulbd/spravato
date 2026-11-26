@@ -6,7 +6,6 @@ namespace Uptms\Consultations\Services;
 
 use Illuminate\Support\Carbon;
 use Uptms\AuditLog\Services\AuditTrail;
-use Uptms\Consultations\Domain\Enums\PriorTreatment;
 use Uptms\Consultations\Models\ConsultationNote;
 use Uptms\Consultations\Models\ConsultationRequest;
 use Uptms\Settings\Services\Settings;
@@ -74,13 +73,14 @@ final readonly class ConsultationPresenter
             'phone_href' => 'tel:+1'.substr(preg_replace('/\D/', '', $request->phone) ?? '', -10),
             'email' => $request->email,
             'message' => $request->message,
-            'referred_by' => $request->referred_by,
             'best_time' => $request->best_time === null ? null : ['value' => $request->best_time->value, 'label' => $request->best_time->label()],
             'insurance' => $request->insurance,
-            'prior_treatment' => self::priorTreatment($request->prior_treatment),
             'contact_method' => $request->contact_method === null ? null : ['value' => $request->contact_method->value, 'label' => $request->contact_method->label()],
+            'patient_status' => $request->patient_status === null ? null : ['value' => $request->patient_status->value, 'label' => $request->patient_status->label()],
+            'emergency_acknowledged' => $request->emergency_acknowledged,
             'source' => [
                 'page' => $request->source_page,
+                'cta' => $request->cta,
                 'previous_page' => $request->previous_page,
                 'first_touch' => $this->describer->firstTouch($request->referrer_host, $request->utm),
                 'utm' => $request->utm,
@@ -130,16 +130,9 @@ final readonly class ConsultationPresenter
             'scheduled_at' => $request->scheduled_at?->toIso8601String(),
             'closed_at' => $request->closed_at?->toIso8601String(),
             'source_page' => $request->source_page,
+            'cta' => $request->cta,
             'allowed_statuses' => array_map(fn ($status): string => $status->value, $request->status->allowedTransitions()),
         ];
-    }
-
-    /** @return array{value: string, label: string}|null */
-    public static function priorTreatment(?string $value): ?array
-    {
-        $treatment = $value === null ? null : PriorTreatment::tryFrom($value);
-
-        return $treatment === null ? null : ['value' => $treatment->value, 'label' => $treatment->label()];
     }
 
     /** "Daniel Reyes" → "Daniel R." */
@@ -197,7 +190,7 @@ final readonly class ConsultationPresenter
         $new = $entry['new_values'] ?? [];
 
         return match ($entry['action']) {
-            'consultation.submitted' => 'Submitted'.(is_string($new['source_page'] ?? null) ? ' from '.$new['source_page'] : ''),
+            'consultation.submitted' => 'Submitted'.(is_string($new['source_page'] ?? null) ? ' from '.$new['source_page'] : '').(is_string($new['cta'] ?? null) ? ' · “'.$new['cta'].'”' : ''),
             'consultation.alert_sent' => 'Staff alert emailed'.(($new['details'] ?? false) === true ? ' with the request' : ' (link only)'),
             'consultation.viewed' => 'Viewed'.($who !== null ? ' by '.$who : ''),
             'consultation.status_changed' => 'Marked '.mb_strtolower((string) ($new['status'] ?? '')).($who !== null ? ' by '.$who : ''),

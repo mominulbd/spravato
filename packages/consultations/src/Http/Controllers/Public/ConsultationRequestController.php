@@ -11,9 +11,19 @@ use Illuminate\Validation\ValidationException;
 use Uptms\Consultations\Actions\SubmitConsultationRequest;
 use Uptms\Consultations\Http\Requests\SubmitConsultationRequestRequest;
 use Uptms\Consultations\Services\Turnstile;
+use Uptms\Consultations\Sources\ConsultationFormSource;
 
 class ConsultationRequestController
 {
+    /**
+     * `GET /public/consultation-form`: the dialog's choices (topics, best
+     * times, follow-up methods, patient statuses). Nothing personal.
+     */
+    public function form(ConsultationFormSource $source): JsonResponse
+    {
+        return ApiResponse::success($source->resolve([]), 'Form retrieved.');
+    }
+
     /**
      * `POST /public/consultation-requests`. Answers with the reference only;
      * nothing the person typed is echoed back.

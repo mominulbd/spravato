@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Database\Seeders\SiteContentSeeder;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -24,11 +23,14 @@ function consultationPayload(array $overrides = []): array
         'phone' => '(253) 555-0198',
         'email' => 'd.reyes@example.com',
         'insurance' => 'Premera Blue Cross',
-        'prior_treatment' => 'both',
-        'contact_method' => 'text',
-        'topic' => 'provider_referral',
-        'source_page' => '/contact',
-        'referrer' => 'http://localhost:3000/tms',
+        'contact_method' => 'either',
+        'patient_status' => 'new',
+        'topic' => 'insurance',
+        'best_time' => 'early_evening',
+        'emergency_acknowledged' => true,
+        'cta' => 'Ask about coverage & cost',
+        'source_page' => '/',
+        'referrer' => 'http://localhost:3000/privacy',
         ...$overrides,
     ];
 }
@@ -49,15 +51,20 @@ it('stores a request encrypted and answers with the reference only', function ()
         ->and($request->status->value)->toBe('new')
         ->and($request->name)->toBe('Daniel Reyes')
         ->and($request->insurance)->toBe('Premera Blue Cross')
-        ->and($request->prior_treatment)->toBe('both')
-        ->and($request->contact_method?->value)->toBe('text')
-        ->and($request->previous_page)->toBe('/tms')
+        ->and($request->contact_method?->value)->toBe('either')
+        ->and($request->patient_status?->value)->toBe('new')
+        ->and($request->topic->value)->toBe('insurance')
+        ->and($request->best_time?->value)->toBe('early_evening')
+        ->and($request->emergency_acknowledged)->toBeTrue()
+        ->and($request->cta)->toBe('Ask about coverage & cost')
+        ->and($request->source_page)->toBe('/')
+        ->and($request->previous_page)->toBe('/privacy')
         ->and($request->device)->toBe('Mobile · Safari')
         ->and($request->follow_up_at?->isFuture())->toBeTrue();
 
     // Encryption at rest: the raw columns hold no plaintext.
     $raw = (array) DB::table('consultation_requests')->where('id', $request->id)->first();
-    foreach (['name' => 'Daniel', 'phone' => '0198', 'email' => 'reyes', 'insurance' => 'Premera', 'prior_treatment' => 'both'] as $column => $fragment) {
+    foreach (['name' => 'Daniel', 'phone' => '0198', 'email' => 'reyes', 'insurance' => 'Premera'] as $column => $fragment) {
         expect((string) $raw[$column])->not->toContain($fragment);
     }
     expect((string) $raw['search_index'])->not->toContain('daniel');
@@ -80,10 +87,11 @@ it('alerts staff with the request when Privacy says to include it', function () 
             && str_contains($text, 'Name: Daniel Reyes')
             && str_contains($text, '(253) 555-0198')
             && str_contains($text, 'd.reyes@example.com')
-            && str_contains($text, 'Premera Blue Cross')
-            && str_contains($text, 'Text message')
-            && str_contains($text, 'Provider referral')
-            && str_contains($text, 'Yes, both therapy and antidepressants')
+            && str_contains($text, 'Insurance provider: Premera Blue Cross')
+            && str_contains($text, 'Preferred follow-up: Either')
+            && str_contains($text, 'Patient status: New patient')
+            && str_contains($text, 'Best time to reach: Early evening')
+            && str_contains($text, 'Asking about: Insurance & cost')
             && str_contains($text, 'Mornings are easiest.')
             // The reference, not the answers, is all the subject carries.
             && $mail->subject === 'New consultation request '.$request->reference;
@@ -109,8 +117,8 @@ it('alerts staff with a link and no patient details when Privacy says so', funct
             && $mail->actionUrl === NewConsultationRequestNotification::url($request->id)
             && ! str_contains((string) $text, 'Daniel')
             && ! str_contains((string) $text, '0198')
-            && ! str_contains((string) $text, 'referral')
-            && ! str_contains((string) $text, 'TMS');
+            && ! str_contains((string) $text, 'Premera')
+            && ! str_contains((string) $text, 'Insurance & cost');
     });
     expect(AuditLog::query()->where('action', 'consultation.alert_sent')->sole()->new_values)->toBe(['details' => false]);
 });
@@ -140,7 +148,7 @@ it('emails the person a receipt with the reference and nothing they typed', func
             && ! str_contains($text, 'Daniel')
             && ! str_contains($text, '0198')
             && ! str_contains($text, 'Premera')
-            && ! str_contains($text, 'referral');
+            && ! str_contains($text, 'Insurance & cost');
     });
     expect(AuditLog::query()->where('action', 'consultation.confirmation_sent')->count())->toBe(1);
 });
@@ -156,26 +164,47 @@ it('sends no receipt for a request without an email address', function () {
 
 it('validates in the patient\'s words', function () {
     $response = $this->postJson('/api/v1/public/consultation-requests', consultationPayload([
-        'first_name' => '', 'last_name' => '', 'phone' => '555-01', 'email' => 'not-an-email', 'insurance' => '',
-        'prior_treatment' => 'surgery', 'contact_method' => null, 'topic' => 'surgery',
+        'first_name' => '', 'last_name' => '', 'phone' => '555-01', 'email' => 'not-an-email',
+        'contact_method' => 'text', 'patient_status' => 'former', 'topic' => 'tms_depression', 'best_time' => 'anytime',
+        'insurance' => str_repeat('a', 121), 'emergency_acknowledged' => false, 'cta' => '<script>',
     ]));
 
     assertErrorCode($response, 'VALIDATION_FAILED', 422)
         ->assertJsonPath('errors.first_name.0', 'Enter your first name so the team knows who to ask for.')
         ->assertJsonPath('errors.last_name.0', 'Enter your last name.')
         ->assertJsonPath('errors.phone.0', 'Enter a 10-digit U.S. phone number, e.g. (253) 555-0142.')
-        ->assertJsonPath('errors.email.0', 'Enter a valid email address, e.g. you@example.com.')
-        ->assertJsonPath('errors.insurance.0', 'Choose your insurance, or “Other” or “No insurance”.')
-        ->assertJsonPath('errors.prior_treatment.0', 'Choose an answer from the list.')
-        ->assertJsonPath('errors.contact_method.0', 'Choose how you would like the clinic to reach you.')
-        ->assertJsonPath('errors.topic.0', 'Choose what you would like to talk about.');
+        ->assertJsonPath('errors.email.0', 'Enter a valid email address, e.g. name@example.com.')
+        ->assertJsonPath('errors.contact_method.0', 'Choose phone, email or either.')
+        ->assertJsonPath('errors.patient_status.0', 'Choose new, existing or not sure.')
+        ->assertJsonPath('errors.topic.0', 'Choose what you would like to discuss.')
+        ->assertJsonPath('errors.best_time.0', 'Choose a time from the list.')
+        ->assertJsonPath('errors.insurance.0', 'Keep the insurance provider under 120 characters.')
+        ->assertJsonPath('errors.emergency_acknowledged.0', 'Please confirm you understand this form is not an emergency service.')
+        ->assertJsonValidationErrors('cta');
     expect(ConsultationRequest::query()->count())->toBe(0);
 });
 
-it('files a request without a topic under TMS for depression', function () {
-    $this->postJson('/api/v1/public/consultation-requests', consultationPayload(['topic' => null]))->assertCreated();
+it('requires the not-an-emergency acknowledgement', function () {
+    $payload = consultationPayload();
+    unset($payload['emergency_acknowledged']);
 
-    expect(ConsultationRequest::query()->sole()->topic->value)->toBe('tms_depression');
+    assertErrorCode($this->postJson('/api/v1/public/consultation-requests', $payload), 'VALIDATION_FAILED', 422)
+        ->assertJsonValidationErrors('emergency_acknowledged');
+    expect(ConsultationRequest::query()->count())->toBe(0);
+});
+
+it('accepts the dialog with only the required fields and files it as a Spravato consultation', function () {
+    $this->postJson('/api/v1/public/consultation-requests', [
+        'first_name' => 'Daniel', 'last_name' => 'Reyes', 'phone' => '253-555-0198', 'email' => 'd.reyes@example.com', 'emergency_acknowledged' => true,
+    ])->assertCreated();
+
+    $request = ConsultationRequest::query()->sole();
+    expect($request->topic->value)->toBe('spravato')
+        ->and($request->insurance)->toBeNull()
+        ->and($request->contact_method)->toBeNull()
+        ->and($request->patient_status)->toBeNull()
+        ->and($request->best_time)->toBeNull()
+        ->and($request->cta)->toBeNull();
 });
 
 it('quietly drops honeypot submissions', function () {
@@ -237,16 +266,13 @@ it('requires a valid Turnstile token once a secret is configured', function () {
     $this->postJson('/api/v1/public/consultation-requests', consultationPayload(['turnstile_token' => 'good']))->assertCreated();
 });
 
-it('gives the website the form choices through the consultation block', function () {
-    $this->seed(SiteContentSeeder::class);
+it('gives the website the dialog\'s choices', function () {
+    $data = $this->getJson('/api/v1/public/consultation-form')->assertOk()->json('data');
 
-    $blocks = $this->getJson('/api/v1/public/page?path=/contact')->assertOk()->json('data.blocks');
-    $block = collect($blocks)->firstWhere('type', 'consultation');
-
-    expect($block['sources']['form']['accepting'])->toBeTrue()
-        ->and(array_column($block['sources']['form']['topics'], 'value'))->toBe(['tms_depression', 'insurance', 'ocd_specialty', 'loved_one', 'provider_referral'])
-        ->and(array_column($block['sources']['form']['prior_treatments'], 'value'))->toBe(['both', 'therapy_only', 'medication_only', 'neither'])
-        ->and(array_column($block['sources']['form']['contact_methods'], 'value'))->toBe(['phone', 'text', 'email'])
-        ->and(array_column($block['sources']['insurers'], 'name'))->toContain('Premera Blue Cross')
-        ->and($block['data']['submit_label'])->toBe('Request My Free Phone Consultation');
+    expect($data['accepting'])->toBeTrue()
+        ->and(array_column($data['topics'], 'value'))->toBe(['spravato', 'eligibility', 'first_visit', 'insurance', 'question'])
+        ->and($data['topics'][0]['label'])->toBe('Spravato consultation')
+        ->and(array_column($data['best_times'], 'value'))->toBe(['morning', 'afternoon', 'early_evening', 'no_preference'])
+        ->and(array_column($data['contact_methods'], 'value'))->toBe(['phone', 'email', 'either'])
+        ->and(array_column($data['patient_statuses'], 'value'))->toBe(['new', 'existing', 'not_sure']);
 });
