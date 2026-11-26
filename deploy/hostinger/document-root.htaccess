@@ -1,4 +1,4 @@
-# UPTMS Admin — document-root .htaccess
+# Spravato (Laravel on Hostinger) — document-root .htaccess
 #
 # Needed only when HOSTINGER_DEPLOY_PATH is the document root itself
 # (…/public_html) and HOSTINGER_PUBLIC_PATH is unset. Laravel's front
@@ -11,7 +11,7 @@
 # when the file is missing, so a hand-tuned host copy (an hPanel PHP handler
 # block, extra rules) survives untouched.
 #
-# The split layout (docs/SETUP.md §5) is preferred: there the Laravel tree is
+# The split layout (deploy/README.md "Hostinger") is preferred: there the Laravel tree is
 # outside the web root entirely and this file is never used.
 
 <IfModule mod_rewrite.c>

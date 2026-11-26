@@ -9,7 +9,7 @@ One domain, two processes (docs/DEVELOPMENT-PLAN.md §1, D2):
 | `/_next/static/*` | static files from `shared/next-static/` (every release's build assets) |
 | everything else (`/`, `/robots.txt`, `/sitemap.xml`, `/indexnow-key.txt`, `/api/revalidate`, …) | Next.js (`site/`), node on `127.0.0.1:3000` or `:3001` |
 
-**Target:** a plain Ubuntu 24.04 VPS with nginx, PHP 8.4-FPM, Node 24 LTS, MySQL 8.4, everything running as one `spravato` user. The host is not chosen yet (docs/DEVELOPMENT-PLAN.md §4, decision 1); anything that gives a root shell works (Hetzner, DigitalOcean, Linode, Vultr, Lightsail, or Forge/Ploi on top of one). Shared hosting that can't proxy part of a domain to a node process can't run this layout. `hostinger/` is the old Laravel-only layout from UPTMS, kept for reference.
+**Target:** a plain Ubuntu 24.04 VPS with nginx, PHP 8.4-FPM, Node 24 LTS, MySQL 8.4, everything running as one `spravato` user. The host is not chosen yet (docs/DEVELOPMENT-PLAN.md §4, decision 1); anything that gives a root shell works (Hetzner, DigitalOcean, Linode, Vultr, Lightsail, or Forge/Ploi on top of one). Shared hosting that can't proxy part of a domain to a node process can't run this layout; for Hostinger shared/Cloud hosting see [Hostinger](#hostinger-shared--cloud-hosting) at the end, which deploys Laravel alone (the uptms-ad layout) and runs the site on its own origin.
 
 ## What is in here
 
@@ -276,3 +276,71 @@ Monitoring requests hit `public` rate limits like anyone (300/min per IP), far a
 - sudoers: `visudo -cf deploy/sudoers/spravato`.
 - `deploy.sh`: `bash -n` and `shellcheck deploy/deploy.sh`; it runs on macOS against stub `systemctl`/`nginx`/`composer`/`npm`/`php`/`curl` (`SUDO=` and `SYSTEMCTL=`/`NGINX_BIN=` pointing at the stubs).
 - systemd units: `systemd-analyze verify deploy/systemd/*` on a Linux box (not available on macOS).
+
+## Hostinger (shared / Cloud hosting)
+
+hPanel hosting runs PHP but cannot send part of one domain to a node process, nor keep a worker running. So on Hostinger the two apps live on **two origins**:
+
+| Origin | Runs | Deployed by |
+| --- | --- | --- |
+| `https://admin.<domain>` (any subdomain) | Laravel: `/admin`, `/api/v1`, `/storage`, `/up` | `.github/workflows/ci.yml`, job `deploy`, on every green push to `main` |
+| `https://<domain>` | the Next.js site (`site/`) | a Node host of its own: hPanel → Websites → Node.js app (Business/Cloud plans), Vercel, or any VPS with `deploy/systemd/spravato-site@.service` |
+
+The site only talks to Laravel server-side (`API_URL`), and staff use the admin on Laravel's origin, so nothing in the code changes; only the environment does. On a Hostinger **VPS** use the one-domain layout above instead.
+
+### What the deploy job does
+
+Same as uptms-ad: builds `vendor/` (`--no-dev`) and `public/build` on the runner, rsyncs the tree with `--delete` (never `.env`, `storage/`, `public/storage`, the host's `.htaccess`, `.well-known/`, nor `site/`, `docs/`, tests), then on the host: `migrate --force`, the `PermissionSeeder`, the full `db:seed` only while `pages` is empty, `storage:link`, the config/route/view/event caches, `queue:restart`. With `HOSTINGER_PUBLIC_PATH` set it publishes only `public/` into the document root and rewrites that copy of `index.php` to the absolute app path. Last, a smoke test: `/up` and `/admin/login` answer 200, `/api/v1/public/settings` answers `"success":true`. A run on `main` is never cancelled mid-way.
+
+Preferred layout, framework outside the web root:
+
+```text
+~/domains/admin.<domain>/laravel/       HOSTINGER_DEPLOY_PATH  (artisan, .env, storage/)
+~/domains/admin.<domain>/public_html/   HOSTINGER_PUBLIC_PATH  (document root)
+```
+
+Without `HOSTINGER_PUBLIC_PATH` the project root is assumed to be the document root; the deploy then restores `hostinger/document-root.htaccess` as `.htaccess` when it is missing.
+
+| GitHub secret / variable | Value |
+| --- | --- |
+| `HOSTINGER_SSH_HOST` (secret) | host or IP; a pasted `ssh -p 65002 u123@1.2.3.4` is parsed too |
+| `HOSTINGER_SSH_USER` (secret) | SSH user (`u123…`) |
+| `HOSTINGER_SSH_PORT` (secret) | defaults to `65002` |
+| `HOSTINGER_SSH_KEY` (secret) | private key whose public half is in hPanel → SSH Access |
+| `HOSTINGER_DEPLOY_PATH` (secret) | absolute Laravel root on the host |
+| `HOSTINGER_PUBLIC_PATH` (secret or variable) | absolute document root, for the split layout |
+| `HOSTINGER_PHP_BIN` (variable) | CLI PHP ≥ 8.3 when it is not under `/opt/alt/php8x/usr/bin/php` |
+| `HOSTINGER_APP_URL` (variable) | Laravel's origin, e.g. `https://admin.<domain>`; enables the smoke test |
+
+### First deploy
+
+1. hPanel: add the subdomain, set its PHP to **8.4**, create the MySQL database, enable SSH and add the deploy key's public half.
+2. Create `HOSTINGER_DEPLOY_PATH/.env` by hand (the deploy never uploads one and refuses to run without it). As in [Environment](#environment), except:
+   ```sh
+   APP_URL=https://admin.<domain>          # Laravel's own origin: media and PDF URLs are built from it
+   SANCTUM_STATEFUL_DOMAINS=admin.<domain>  # where staff sign in
+   SESSION_DOMAIN=null
+   FRONTEND_URL=https://<domain>            # the site: revalidation webhook and preview links
+   CACHE_STORE=database                     # no Redis on shared hosting; same for sessions and queue
+   ```
+   `APP_KEY`: generate once (`php artisan key:generate --show`) and **never change it** — it decrypts every consultation request.
+3. Add the secrets and variables above, then push to `main` (or Actions → CI → Run workflow). The first run seeds roles and the designed site content.
+4. Over SSH: `cd <deploy path> && <php from the deploy log> artisan uptms:create-super-admin you@clinic.com "Your Name"`.
+5. hPanel → Cron Jobs, both every minute, with the PHP binary the deploy log printed:
+   - `cd <deploy path> && /opt/alt/php84/usr/bin/php artisan schedule:run`
+   - `cd <deploy path> && /opt/alt/php84/usr/bin/php artisan queue:work --stop-when-empty --max-time=55`
+6. The site's environment on its Node host (from `site/.env.example`), then build and start it (`npm ci && npm run build`, start command `node .next/standalone/site/server.js` with `PORT` from the host):
+   ```sh
+   API_URL=https://admin.<domain>/api/v1
+   NEXT_PUBLIC_SITE_URL=https://<domain>
+   MEDIA_ORIGINS=https://admin.<domain>     # CSP: media and PDFs come from Laravel's origin
+   REVALIDATE_SECRET=...                    # = FRONTEND_REVALIDATE_SECRET
+   SITE_TOKEN=...                           # = FRONTEND_SITE_TOKEN
+   NEXT_PUBLIC_TURNSTILE_SITE_KEY=...
+   ALLOW_INDEXING=false                     # "true" on launch day
+   ```
+   The site prerenders from the API at build time, so deploy Laravel first.
+
+`reset_database` (manual run only) drops and re-migrates every table for first-deploy recovery; it refuses once any consultation request or user exists.
+
+Backups: `scripts/backup.sh` works over SSH as a nightly hPanel cron job too; Hostinger's own daily backups do not replace an off-host, encrypted copy.
