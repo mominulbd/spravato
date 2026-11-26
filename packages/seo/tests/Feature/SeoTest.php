@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-use Database\Seeders\SiteContentSeeder;
 use Illuminate\Support\Facades\DB;
 use Uptms\AuditLog\Models\AuditLog;
 use Uptms\Pages\Models\Page;
 
 beforeEach(function () {
-    $this->seed(SiteContentSeeder::class);
+    seedSiteContent();
     $this->home = Page::query()->where('path', '/')->firstOrFail();
 });
 

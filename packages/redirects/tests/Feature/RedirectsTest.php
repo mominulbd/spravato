@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Database\Seeders\SiteContentSeeder;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +12,7 @@ use Uptms\Redirects\Models\Redirect;
 use Uptms\Redirects\Services\RedirectRules;
 
 beforeEach(function () {
-    $this->seed(SiteContentSeeder::class);
+    seedSiteContent();
     $this->admin = asAdmin(staffUser('admin'));
 });
 

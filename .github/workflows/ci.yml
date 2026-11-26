@@ -61,7 +61,9 @@ jobs:
           restore-keys: composer-${{ runner.os }}-
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: composer lint
-      - run: php artisan test --compact
+      # One process per runner core, each on its own spravato_test_<n> database
+      # (Laravel creates them; the CI user is root).
+      - run: php artisan test --parallel --compact
 
   # React admin (resources/js): ESLint, tsc, Vitest, Vite build.
   admin:
@@ -357,6 +359,9 @@ jobs:
       # This selects the CLI only. The PHP the *website* runs under is set
       # per-domain in hPanel and has to be 8.3+ as well (8.4 recommended), or
       # the deploy succeeds and every request 500s.
+      # ssh joins its arguments into one command line, so an empty one (no
+      # HOSTINGER_PHP_BIN, no reset_database) vanishes and shifts the rest.
+      # printf %q quotes each, empty ones as '', so positions survive.
       - name: Migrate and refresh caches
         env:
           DEPLOY_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
@@ -368,7 +373,7 @@ jobs:
 
           ssh -i ~/.ssh/id_rsa -p "$DEPLOY_SSH_PORT" -o StrictHostKeyChecking=no \
             "$DEPLOY_SSH_USER@$DEPLOY_SSH_HOST" \
-            bash -s -- "$DEPLOY_PATH" "$PHP_BIN_OVERRIDE" "$RESET_DATABASE" "$PUBLIC_PATH" <<'REMOTE'
+            "bash -s -- $(printf '%q ' "$DEPLOY_PATH" "$PHP_BIN_OVERRIDE" "$RESET_DATABASE" "$PUBLIC_PATH")" <<'REMOTE'
           set -e
 
           deploy_path=$1
@@ -557,7 +562,7 @@ jobs:
 
           ssh -i ~/.ssh/id_rsa -p "$DEPLOY_SSH_PORT" -o StrictHostKeyChecking=no \
             "$DEPLOY_SSH_USER@$DEPLOY_SSH_HOST" \
-            bash -s -- "$DEPLOY_PATH" "$PUBLIC_PATH" <<'REMOTE'
+            "bash -s -- $(printf '%q ' "$DEPLOY_PATH" "$PUBLIC_PATH")" <<'REMOTE'
           set -e
 
           deploy_path=${1%/}

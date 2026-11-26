@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Database\Seeders\SiteContentSeeder;
 use Uptms\Collections\Models\Faq;
 use Uptms\Collections\Models\TeamMember;
 use Uptms\Pages\Actions\SavePageContentAction;
@@ -16,7 +15,7 @@ use Uptms\Publishing\Services\PublicCache;
  */
 
 beforeEach(function () {
-    $this->seed(SiteContentSeeder::class);
+    seedSiteContent();
     $this->home = Page::query()->where('path', '/')->firstOrFail();
 
     // Unpublished content that must never reach the graph.

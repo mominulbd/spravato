@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Database\Seeders\SiteContentSeeder;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Uptms\AuditLog\Models\AuditLog;
@@ -11,7 +10,7 @@ use Uptms\Seo\Models\SeoAudit;
 use Uptms\Seo\Models\SeoMeta;
 
 beforeEach(function () {
-    $this->seed(SiteContentSeeder::class);
+    seedSiteContent();
     // The seeded TMS, Contact and Privacy pages start out of search; these tests need several indexable URLs.
     SeoMeta::query()->update(['robots_index' => true, 'in_sitemap' => true]);
     $this->admin = asAdmin(staffUser('admin'));
