@@ -449,7 +449,7 @@ jobs:
           # Reported rather than corrected: only the host knows its domains.
           app_env=$(env_value APP_ENV)
           if [ "$app_env" = "production" ]; then
-            [ "$(env_value APP_DEBUG)" = "false" ] || echo "WARNING: APP_DEBUG is not false in production -- stack traces would reach visitors."
+            [ "$(env_value APP_DEBUG)" = "false" ] || { echo "APP_DEBUG is not false in production -- stack traces would reach visitors. Set APP_DEBUG=false."; exit 1; }
             [ -n "$(env_value APP_KEY)" ] || { echo "APP_KEY is empty. Set it once (php artisan key:generate) and never change it: it decrypts every consultation request."; exit 1; }
             case "$(env_value FRONTEND_URL)" in
               ''|*localhost*|*127.0.0.1*)
@@ -465,7 +465,12 @@ jobs:
             esac
             [ "$(env_value MAIL_MAILER)" != "log" ] || echo "WARNING: MAIL_MAILER=log writes staff alerts into laravel.log. Configure SMTP."
           else
-            echo "WARNING: APP_ENV is '${app_env:-unset}', not production."
+            # Refused, not warned: outside production db:seed also creates the
+            # demo accounts (DemoUserSeeder), whose password is in this
+            # repository, and APP_DEBUG pages leak stack traces.
+            echo "APP_ENV is '${app_env:-unset}' in $deploy_path/.env. Set APP_ENV=production and"
+            echo "APP_DEBUG=false there, then re-run. Nothing was migrated or seeded."
+            exit 1
           fi
 
           # migrate:fresh only on an explicit manual dispatch with the box
