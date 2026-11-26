@@ -30,7 +30,8 @@ export function CareTeam({ block, site }: { block: Block<Data, { team?: TeamMemb
         }
         intro={data.intro}
       />
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      {/* Cards stretch to the tallest one; the link sits at the bottom of each. */}
+      <div className="grid auto-rows-fr gap-6 lg:grid-cols-2">
         {team.map((member) => (
           <article key={member.name} className="flex flex-col gap-7 rounded-sheet bg-white p-4 sm:flex-row sm:pr-8">
             {member.photo && <Picture image={member.photo} sizes="200px" className="h-[260px] w-full rounded-[20px] object-cover sm:w-[200px] sm:shrink-0" />}
@@ -39,7 +40,7 @@ export function CareTeam({ block, site }: { block: Block<Data, { team?: TeamMemb
               <h3 className="font-serif text-heading-m text-ink">{member.name}</h3>
               {member.credentials && <p className="text-[14px] leading-[1.5] font-semibold text-ink-soft">{member.credentials}</p>}
               {member.bio && <p className="text-body-s text-ink-soft">{member.bio}</p>}
-              <TextLink link={resolveLink(member.is_founder ? data.founder_link : data.member_link, site.settings)} />
+              <TextLink link={resolveLink(member.is_founder ? data.founder_link : data.member_link, site.settings)} className="mt-auto pt-2" />
             </div>
           </article>
         ))}

@@ -27,8 +27,8 @@ export function LandingHero({ block, site }: { block: Block<Data>; site: SiteCon
   const { data } = block;
 
   return (
-    <section id="top" className="mx-auto w-full max-w-[1440px] px-3 md:px-6">
-      <div className="flex flex-col items-center gap-10 overflow-hidden rounded-panel bg-navy px-6 pt-10 pb-6 text-white md:px-12 md:pt-14 lg:flex-row lg:gap-16 xl:px-[72px] xl:pt-[72px] xl:pb-10">
+    <section id="top" className="w-full px-4">
+      <div className="flex flex-col items-center gap-10 overflow-hidden rounded-panel bg-navy px-6 pt-10 pb-6 text-white md:px-12 md:pt-14 lg:flex-row lg:gap-16 xl:px-[max(96px,calc((100%_-_1200px)/2))] xl:pt-[72px] xl:pb-10">
         <div className="flex min-w-0 flex-1 flex-col gap-7">
           {data.eyebrow && <p className="font-display text-eyebrow font-bold text-sky uppercase">{data.eyebrow}</p>}
           <Headline as="h1" text={data.headline} accent="sky" className="text-[46px] leading-[1.04] tracking-[-0.025em] md:text-[60px] xl:text-display-xl" />

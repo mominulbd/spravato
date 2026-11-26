@@ -182,10 +182,11 @@ export function ConsultationDialog({ form, phone }: { form: ConsultationForm | n
         // A click on the scrim (outside the panel) closes it.
         if (event.target === dialogRef.current) close();
       }}
-      className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto overscroll-contain bg-transparent p-0 backdrop:bg-navy/95 open:flex open:items-start open:justify-center md:open:py-20"
+      className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-hidden bg-transparent p-0 backdrop:bg-navy/95 open:flex open:items-center open:justify-center md:open:p-6"
     >
-      <div className="flex w-full max-w-[760px] flex-col gap-7 bg-white px-5 pt-8 pb-8 shadow-[0_24px_32px_rgba(13,31,51,0.28)] max-md:min-h-dvh md:rounded-panel md:px-12 md:pt-12 md:pb-10">
-        <div className="flex items-start gap-6">
+      {/* Fixed height: the header stays put and only the body scrolls. */}
+      <div className="flex h-dvh w-full max-w-[760px] flex-col overflow-hidden bg-white shadow-[0_24px_32px_rgba(13,31,51,0.28)] md:h-[min(860px,calc(100dvh-48px))] md:rounded-panel">
+        <div className="flex shrink-0 items-start gap-6 border-b border-line px-5 pt-8 pb-6 md:px-12 md:pt-12 md:pb-7">
           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
             <p className="font-display text-eyebrow font-bold tracking-[1.3px] text-royal uppercase">Spravato® consultation</p>
             <h2 id={titleId} className="font-serif text-[30px] leading-[1.15] tracking-[-0.54px] text-ink md:text-heading-m md:tracking-[-0.54px]">
@@ -203,6 +204,7 @@ export function ConsultationDialog({ form, phone }: { form: ConsultationForm | n
           </button>
         </div>
 
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 pt-6 pb-8 md:px-12 md:pt-7 md:pb-10">
         {success ? (
           <Confirmation reference={success.reference} phone={phone} onClose={close} />
         ) : accepting && form ? (
@@ -296,6 +298,7 @@ export function ConsultationDialog({ form, phone }: { form: ConsultationForm | n
             <Notes phone={null} />
           </div>
         )}
+        </div>
       </div>
     </dialog>
   );

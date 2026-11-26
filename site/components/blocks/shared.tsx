@@ -9,13 +9,16 @@ export function Section({ id, className = "", children }: { id?: string | null; 
   );
 }
 
-/** A rounded colour panel inset 24px from the page edge (design Version C). */
+/**
+ * A rounded colour panel, full width with a 16px gap to the page edge. On wide
+ * screens its content keeps the 1200px column the other sections use.
+ */
 export function PanelSection({ id, tone, className = "", children }: { id?: string | null; tone: "navy" | "sky-soft" | "royal"; className?: string; children: ReactNode }) {
   const bg = { navy: "bg-navy text-white", "sky-soft": "bg-sky-soft", royal: "bg-royal text-white" }[tone];
 
   return (
-    <section id={id ?? undefined} className="mx-auto w-full max-w-[1440px] scroll-mt-6 px-3 md:px-6">
-      <div className={`rounded-panel p-6 py-14 md:p-12 xl:p-24 ${bg} ${className}`}>{children}</div>
+    <section id={id ?? undefined} className="w-full scroll-mt-6 px-4">
+      <div className={`rounded-panel p-6 py-14 md:p-12 xl:p-24 xl:px-[max(96px,calc((100%_-_1200px)/2))] ${bg} ${className}`}>{children}</div>
     </section>
   );
 }
