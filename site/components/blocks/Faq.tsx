@@ -3,7 +3,8 @@ import { Headline } from "@/components/ui/Headline";
 import { Paragraphs } from "@/components/ui/RichText";
 import { SectionRail } from "@/components/ui/SectionRail";
 import { resolveLink } from "@/lib/text";
-import type { Block, Faq as FaqItem, Link, SiteContext } from "@/lib/types";
+import type { Block, Faq as FaqEntry, Link, SiteContext } from "@/lib/types";
+import { FaqItem } from "./FaqItem";
 import { DISPLAY_L, Section } from "./shared";
 
 interface Data {
@@ -19,10 +20,10 @@ interface Data {
 
 /**
  * Figma "08 · FAQ": intro, a call button and the documents card beside an
- * accordion of Collections · FAQs. Native <details>, so it works without
- * JavaScript; the first answer starts open, as designed.
+ * accordion of Collections · FAQs (disclosure buttons, see FaqItem); the
+ * first answer starts open, as designed.
  */
-export function Faq({ block, site }: { block: Block<Data, { faqs?: FaqItem[] }>; site: SiteContext }) {
+export function Faq({ block, site }: { block: Block<Data, { faqs?: FaqEntry[] }>; site: SiteContext }) {
   const { data } = block;
   const links = [data.aside_link, ...(data.aside_links ?? [])].map((link) => resolveLink(link, site.settings)).filter((link): link is Link => link !== null);
 
@@ -43,20 +44,11 @@ export function Faq({ block, site }: { block: Block<Data, { faqs?: FaqItem[] }>;
           </div>
         )}
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1" data-faq>
         {(block.sources.faqs ?? []).map((faq, i) => (
-          <details key={faq.question} open={i === 0} className="group border-b border-line py-[22px]">
-            <summary className="flex cursor-pointer list-none items-center gap-6 [&::-webkit-details-marker]:hidden">
-              <span className="min-w-0 flex-1 text-title font-bold text-ink">{faq.question}</span>
-              <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sky-soft text-title font-bold text-royal group-open:bg-royal group-open:text-white">
-                <span className="group-open:hidden">+</span>
-                <span className="hidden group-open:inline">−</span>
-              </span>
-            </summary>
-            <div className="mt-3 flex flex-col gap-3">
-              <Paragraphs text={faq.answer} className="text-body-m text-ink-soft" />
-            </div>
-          </details>
+          <FaqItem key={faq.question} question={faq.question} defaultOpen={i === 0}>
+            <Paragraphs text={faq.answer} className="text-body-m text-ink-soft" />
+          </FaqItem>
         ))}
       </div>
     </Section>

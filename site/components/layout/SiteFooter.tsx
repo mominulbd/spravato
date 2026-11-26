@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { MenuItem, Settings } from "@/lib/types";
-import { isExternal } from "@/lib/text";
+import { isPdf, linkProps } from "@/lib/text";
 
 /**
  * Figma "Landing footer": brand, visit, contact and the official SPRAVATO®
@@ -33,10 +33,10 @@ export function SiteFooter({ settings, documents }: { settings: Settings; docume
           <div className="flex flex-col gap-3">
             <h2 className="text-title font-bold">Contact</h2>
             <p className="flex flex-col text-body-s opacity-86">
-              <a href={clinic.phone.href} className="hover:underline">
+              <a href={clinic.phone.href} className="inline-flex min-h-6 items-center self-start hover:underline">
                 {clinic.phone.display}
               </a>
-              <a href={`mailto:${clinic.email}`} className="hover:underline">
+              <a href={`mailto:${clinic.email}`} className="inline-flex min-h-6 items-center self-start hover:underline">
                 {clinic.email}
               </a>
             </p>
@@ -48,8 +48,9 @@ export function SiteFooter({ settings, documents }: { settings: Settings; docume
               <ul className="flex flex-col gap-2.5 text-body-s opacity-86">
                 {documents.map((item) => (
                   <li key={item.href}>
-                    <a href={item.href} className="hover:underline" {...(isExternal(item.href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                    <a href={item.href} className="inline-flex min-h-6 items-center hover:underline" {...linkProps(item.href)}>
                       {item.label}
+                      {isPdf(item.href) && <span className="sr-only"> (PDF, opens in a new tab)</span>}
                     </a>
                   </li>
                 ))}

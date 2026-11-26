@@ -1,6 +1,6 @@
 # Spravato — Development Plan
 
-Status: **Phase 1 done** (2026-11-25): the Spravato page at `/` renders from the CMS and matches the Figma desktop frame. **Next: Phase 2** (consultation dialog) · supersedes the two-repository layout in `ROADMAP.md` and `ARCHITECTURE.md` §1
+Status: **Phase 3 done** (2026-11-26): metadata, JSON-LD, sitemap, robots and the PDF and video handling come from the CMS; the three official PDFs are still to be supplied. **Phase 4 in progress** (hardening & launch): evidence is collected in `docs/LAUNCH-CHECKLIST.md` · supersedes the two-repository layout in `ROADMAP.md` and `ARCHITECTURE.md` §1
 
 **Goal:** turn the static Spravato landing page (Figma file `Ok7lXCmg2hLZ8iurI1p85j`, page "Spravato"; the static HTML prototype was removed from the repo on 2026-11-25) into a CMS-driven page, served by a **Next.js front end that lives inside this Laravel project**, with the consultation modal feeding the existing encrypted inbox. Staff sign in at **`/admin/login`**.
 
@@ -110,7 +110,7 @@ Map every section of the Figma Spravato page to a block type (reuse existing one
 - Photos exported from Figma into `database/seeders/assets/spravato` and uploaded through the media pipeline; the logos are static in `site/public/brand`. The provider photos are the existing team photos (byte-identical).
 - Official documents: the `documents` menu (footer) and the FAQ card / "Read the Medication Guide" link appear once `spravato-medication-guide.pdf`, `spravato-prescribing-information.pdf` and `spravato-instructions-for-use.pdf` are placed in `database/seeders/assets/spravato` and seeded, or uploaded in the admin.
 - Videos: covers only; the play button appears once a video address is set on the block (no official URLs confirmed yet). Nothing loads from a video host until play.
-- "Request a consultation" buttons link to `#consultation`; the dialog that answers it is Phase 2.
+- "Request a consultation" buttons link to `#consultation`; the dialog that answers it is built in Phase 2.
 - Figma has a desktop frame only; tablet and phone layouts are stacked versions, reviewed at 390 px.
 - The seeded TMS and Contact pages (UPTMS) still exist in the CMS but the site does not render them; remove them with their tests later.
 - Not in the design and left out: Important Safety Information (§4).
@@ -130,6 +130,15 @@ The prototype's consultation modal has fields the current form doesn't. Extend `
 
 **Done when:** a request sent from any button on `/` appears in the inbox with its topic and source, and no patient detail is in logs or the alert email beyond what Privacy settings allow.
 
+**As built (2026-11-26):**
+- The dialog follows Figma "Consultation dialog" (node 1100:2053). Required: first and last name, phone, email and the "not an emergency service" box; everything else is optional. Figma shows one state only; the error, sending, success (with the reference), rate-limited and "requests paused" states reuse its parts.
+- `uptms.consultations` now serves the dialog alone: new `patient_status`, `emergency_acknowledged` and `cta` columns; topics `spravato` · `eligibility` · `first_visit` · `insurance` · `question`; best times morning · afternoon · early evening · no preference; follow-up phone · email · either. The old TMS form's "tried therapy / antidepressants" and "referring provider" are dropped (the dialog asks people not to share treatment history). `insurance` keeps its encrypted column. Earlier rows are mapped to the nearest new value.
+- Buttons choose the topic in the link: `#consultation?topic=eligibility` ("Discuss your eligibility"), `first_visit` ("Talk through your first visit"), `insurance` ("Ask about coverage & cost"), `question` (the two care-team links); plain `#consultation` opens on "Spravato consultation". The button's label is sent as `cta` and shown under "Where it came from"; an address such as `/#consultation?topic=insurance` opens the dialog on arrival.
+- The dialog is a native modal `<dialog>` (page inert behind it, Esc and the scrim close it, focus returns to the button). It posts through a server action (`site/app/actions/consultation.ts`); its choices come from the new `GET /public/consultation-form`.
+- Turnstile loads only after the dialog first opens, and only with `NEXT_PUBLIC_TURNSTILE_SITE_KEY` set, so `/` makes no third-party request on load. Tag Manager's sensitive path is now `/`.
+- Vitest covers the form rules, topic links and payload; no DOM test setup exists in `site/`, so the dialog's keyboard behaviour is checked in Playwright instead.
+- **Not verified here:** Turnstile with real keys, and email delivery. The `content` and `seo` Playwright specs still expect the UPTMS home hero and the removed posts audit; they are left for the scope-cut cleanup.
+
 ### Phase 3 — SEO, documents & video
 
 | Area | Deliverables |
@@ -141,6 +150,14 @@ The prototype's consultation modal has fields the current form doesn't. Extend `
 
 **Done when:** metadata and JSON-LD validate, the PDFs open, and the page makes no third-party request on load.
 
+**As built (2026-11-26):**
+- Metadata and JSON-LD come from the CMS: `site/lib/seo.ts` builds `generateMetadata` and the JSON-LD graph (`MedicalClinic`, `MedicalWebPage`, `FAQPage`, team as `Physician`/`Person`) from the page's `seo` payload.
+- `/sitemap.xml` lists `/` only. `/robots.txt` is always served from the admin-editable robots text, with the `Sitemap:` line added. Pre-launch `noindex` is enforced by the page robots meta unless `ALLOW_INDEXING=true`. `/indexnow-key.txt` is served for IndexNow.
+- PDFs are served inline as `application/pdf` from `/storage` (deploy configs set the type, `Content-Disposition: inline` and `nosniff`); uploads are refused unless the file starts with `%PDF-`.
+- Links to official PDFs (footer `documents` menu, FAQ card, "Read the Medication Guide") store the **media id**, not the file address, and are resolved when served (`MediaPresenter::presentDocument`), so replacing a PDF keeps them working and a trashed one drops the link. Menu items have a `document` type; block links take `media_id`; the admin picks the PDF from the media library.
+- Videos sit behind a click-to-play facade; nothing loads from a video host until the visitor presses play. The e2e suite checks that `/` makes no third-party request on load.
+- **Still missing:** the three official PDFs in `database/seeders/assets/spravato` (or uploaded in the admin), so their links stay hidden for now.
+
 ### Phase 4 — Hardening & launch
 
 | Area | Deliverables |
@@ -151,7 +168,7 @@ The prototype's consultation modal has fields the current form doesn't. Extend `
 | Deploy | Proxy config live; Next.js as a managed node process (pm2/systemd or host's Node app); Laravel queue worker + scheduler; zero-downtime deploy script for both; uptime monitoring |
 | Cleanup | Docs final |
 
-**Done when:** the launch checklist is complete with evidence (CI run, Lighthouse and axe reports).
+**Done when:** the launch checklist (`docs/LAUNCH-CHECKLIST.md`) is complete with evidence (CI run, Lighthouse and axe reports).
 
 ---
 

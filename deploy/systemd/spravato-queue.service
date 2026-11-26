@@ -1,0 +1,37 @@
+# Laravel's queue worker: media variants, the revalidation webhook, staff
+# alerts and receipts (QUEUE_CONNECTION=database).
+#
+# It exits on its own after an hour (--max-time) or 500 jobs, or when
+# `php artisan queue:restart` runs (deploy.sh does, after every switch);
+# systemd then starts it again from the new `current` release.
+#
+# Install: sudo cp deploy/systemd/spravato-queue.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now spravato-queue
+[Unit]
+Description=Spravato Laravel queue worker
+After=network.target mysql.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=spravato
+Group=spravato
+WorkingDirectory=/var/www/spravato/current
+ExecStart=/usr/bin/php /var/www/spravato/current/artisan queue:work --sleep=3 --tries=3 --timeout=120 --max-time=3600 --max-jobs=500 --memory=256
+Restart=always
+RestartSec=5
+# Finish the current job before stopping (> --timeout).
+KillSignal=SIGTERM
+TimeoutStopSec=130
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=spravato-queue
+
+[Install]
+WantedBy=multi-user.target

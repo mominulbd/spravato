@@ -20,6 +20,6 @@ it('echoes a caller-supplied request id', function (): void {
 it('sends the baseline security headers', function (): void {
     $this->getJson('/api/v1/health')
         ->assertHeader('X-Content-Type-Options', 'nosniff')
-        ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+        ->assertHeader('X-Frame-Options', 'DENY')
         ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 });

@@ -14,6 +14,14 @@ interface Data {
   image?: PublicImage | null;
 }
 
+/*
+ * The rendered width of the hero photo, so the browser picks the smallest
+ * variant that fills it: 500px beside the copy from lg; below that the full
+ * panel width (viewport minus the section and panel padding: 2×12 + 2×24 px,
+ * 2×24 + 2×48 px from md), capped at 500px.
+ */
+const HERO_SIZES = "(min-width: 1024px) 500px, (min-width: 768px) min(500px, calc(100vw - 144px)), min(500px, calc(100vw - 72px))";
+
 /** Figma "Hero": navy panel, copy beside the nasal-spray photo. */
 export function LandingHero({ block, site }: { block: Block<Data>; site: SiteContext }) {
   const { data } = block;
@@ -32,7 +40,7 @@ export function LandingHero({ block, site }: { block: Block<Data>; site: SiteCon
           </div>
         </div>
         <div className="w-full max-w-[500px] lg:mb-8 lg:ml-[60px] lg:w-[500px] lg:shrink-0">
-          <Picture image={data.image} sizes="(min-width: 1024px) 500px, 100vw" priority className="aspect-[500/560] w-full rounded-sheet object-cover" />
+          <Picture image={data.image} sizes={HERO_SIZES} priority className="aspect-[500/560] w-full rounded-sheet object-cover" />
         </div>
       </div>
     </section>

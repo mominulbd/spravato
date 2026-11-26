@@ -62,12 +62,13 @@ final class ExceptionRenderer
                 ErrorCode::NotFound,
                 'The requested resource was not found.',
             ),
+            // Retry-After and X-RateLimit-* stay on the response for clients and proxies.
             $e instanceof ThrottleRequestsException => ApiResponse::error(
                 ErrorCode::RateLimited,
                 'Too many requests. Please slow down.',
                 [],
                 ['retry_after' => $e->getHeaders()['Retry-After'] ?? null],
-            ),
+            )->withHeaders($e->getHeaders()),
             $e instanceof HttpExceptionInterface => ApiResponse::error(
                 self::codeForStatus($e->getStatusCode()),
                 $e->getMessage() !== '' ? $e->getMessage() : 'Request failed.',

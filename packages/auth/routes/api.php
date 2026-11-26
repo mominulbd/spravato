@@ -9,7 +9,7 @@ use Uptms\Auth\Http\Controllers\SessionController;
 
 Route::post('auth/login', [SessionController::class, 'login'])->middleware('throttle:login')->name('login');
 Route::post('auth/two-factor-challenge', [SessionController::class, 'challenge'])->middleware('throttle:two-factor')->name('two_factor.challenge');
-Route::post('auth/logout', [SessionController::class, 'logout'])->middleware('auth:sanctum')->name('logout');
+Route::post('auth/logout', [SessionController::class, 'logout'])->middleware(['auth:sanctum', 'throttle:admin'])->name('logout');
 
 Route::post('auth/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:password-reset')->name('password.email');
 Route::post('auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:password-reset')->name('password.update');

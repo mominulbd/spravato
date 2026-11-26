@@ -1,0 +1,12 @@
+# Runs spravato-scheduler.service at the start of every minute.
+[Unit]
+Description=Run the Spravato Laravel scheduler every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=1s
+Persistent=false
+Unit=spravato-scheduler.service
+
+[Install]
+WantedBy=timers.target

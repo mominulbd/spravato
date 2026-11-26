@@ -1,0 +1,87 @@
+{
+  "url": "http://127.0.0.1:3124/",
+  "label": "e2e",
+  "lighthouse": "lighthouse@13.6.0",
+  "date": "2026-11-26T04:57:27.341Z",
+  "runs": 3,
+  "results": {
+    "mobile": {
+      "scores": {
+        "performance": 100,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 69
+      },
+      "metrics": {
+        "lcpMs": 909,
+        "cls": 0,
+        "fcpMs": 909,
+        "tbtMs": 15,
+        "speedIndexMs": 909
+      },
+      "lcpElement": {
+        "selector": "section#top > div.flex > div.flex > h1.font-serif",
+        "label": "Could Spravato® be a next step for you?",
+        "snippet": "<h1 class=\"font-serif font-normal text-balance text-[46px] leading-[1.04] tracking-[-…\">"
+      },
+      "transfer": {
+        "totalBytes": 413246,
+        "scriptBytes": 155894,
+        "imageBytes": 27064,
+        "fontBytes": 193170
+      },
+      "failedAudits": [
+        "accessibility: target-size (Touch targets do not have sufficient size or spacing.)",
+        "seo: is-crawlable (Page is blocked from indexing)"
+      ],
+      "report": "mobile-2.report.html",
+      "performanceRuns": [
+        100,
+        100,
+        100
+      ]
+    },
+    "desktop": {
+      "scores": {
+        "performance": 100,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 69
+      },
+      "metrics": {
+        "lcpMs": 710,
+        "cls": 0,
+        "fcpMs": 250,
+        "tbtMs": 0,
+        "speedIndexMs": 250
+      },
+      "lcpElement": {
+        "selector": "div.flex > div.w-full > picture > img.aspect-[500/560]",
+        "label": "Close-up of a person positioning a SPRAVATO® 28 mg nasal spray device at their …",
+        "snippet": "<img src=\"http://127.0.0.1:8124/storage/media/01a21636-ed57-70bb-96d7-724a34f9f4f9/w…\" alt=\"Close-up of a person positioning a SPRAVATO® 28 mg nasal spray device at t…\" width=\"460\" height=\"576\" loading=\"eager\" fetchpriority=\"high\" class=\"aspect-[500/560] w-full rounded-sheet object-cover\" style=\"object-position:50% 50%\">"
+      },
+      "transfer": {
+        "totalBytes": 412012,
+        "scriptBytes": 155894,
+        "imageBytes": 25830,
+        "fontBytes": 193170
+      },
+      "failedAudits": [
+        "accessibility: target-size (Touch targets do not have sufficient size or spacing.)",
+        "seo: is-crawlable (Page is blocked from indexing)"
+      ],
+      "report": "desktop-2.report.html",
+      "performanceRuns": [
+        100,
+        100,
+        100
+      ]
+    }
+  },
+  "budget": {
+    "performance": 0.95,
+    "lcp": 2500,
+    "cls": 0.1
+  },
+  "failures": []
+}

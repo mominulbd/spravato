@@ -34,3 +34,6 @@ Thumbs.db
 /site/next-env.d.ts
 /site/*.tsbuildinfo
 *.tsbuildinfo
+
+# Lighthouse HTML reports are large; summaries are committed (docs/reports/README.md).
+/docs/reports/lighthouse/**/*.html

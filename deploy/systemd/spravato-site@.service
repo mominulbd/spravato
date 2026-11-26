@@ -1,0 +1,57 @@
+# The Next.js site (site/, `output: "standalone"`), one instance per port.
+# deploy/deploy.sh runs two of them blue/green — spravato-site@3000 and
+# spravato-site@3001 — starting the new release on the idle port, checking
+# it, pointing nginx at it and only then stopping the old one, so a release
+# never drops a request.
+#
+# /var/www/spravato/site-<port> is a symlink to a release's
+# site/.next/standalone/site (deploy.sh sets it before starting the unit);
+# server.js and its traced node_modules live there.
+#
+# Install: sudo cp deploy/systemd/spravato-site@.service /etc/systemd/system/
+#          sudo systemctl daemon-reload
+# deploy.sh enables and starts the right instance; don't enable both by hand.
+[Unit]
+Description=Spravato public site (Next.js) on 127.0.0.1:%i
+After=network.target
+# Restart forever, never give up after a burst of crashes.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=spravato
+Group=spravato
+WorkingDirectory=/var/www/spravato/site-%i
+# Runtime values (API_URL, REVALIDATE_SECRET, SITE_TOKEN, ALLOW_INDEXING, …):
+# the same file the build read as site/.env.production (deploy/README.md).
+EnvironmentFile=/var/www/spravato/shared/site.env
+Environment=NODE_ENV=production
+Environment=PORT=%i
+Environment=HOSTNAME=127.0.0.1
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+# Let in-flight requests finish when the old instance is stopped.
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# Hardening: the site only reads its release and talks to 127.0.0.1.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+# Next's cache (ISR / `use cache` entries) is written inside .next/cache.
+ReadWritePaths=/var/www/spravato/releases
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=spravato-site-%i
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+# Lets the `spravato` user run deploy/deploy.sh without a password prompt,
+# and nothing else as root. Install with visudo's check:
+#   sudo visudo -cf deploy/sudoers/spravato && \
+#   sudo install -m 0440 deploy/sudoers/spravato /etc/sudoers.d/spravato
+Cmnd_Alias SPRAVATO_SITE = \
+    /usr/bin/systemctl start spravato-site@3000, /usr/bin/systemctl start spravato-site@3001, \
+    /usr/bin/systemctl stop spravato-site@3000, /usr/bin/systemctl stop spravato-site@3001, \
+    /usr/bin/systemctl restart spravato-site@3000, /usr/bin/systemctl restart spravato-site@3001, \
+    /usr/bin/systemctl enable spravato-site@3000, /usr/bin/systemctl enable spravato-site@3001, \
+    /usr/bin/systemctl disable spravato-site@3000, /usr/bin/systemctl disable spravato-site@3001
+Cmnd_Alias SPRAVATO_WEB = \
+    /usr/sbin/nginx -t, /usr/bin/systemctl reload nginx, \
+    /usr/bin/systemctl reload php8.4-fpm, \
+    /usr/bin/systemctl restart spravato-queue
+# Apache variant (WEB_SERVER=apache): add these and SPRAVATO_APACHE below.
+# Cmnd_Alias SPRAVATO_APACHE = /usr/sbin/apache2ctl configtest, /usr/bin/systemctl reload apache2
+spravato ALL=(root) NOPASSWD: SPRAVATO_SITE, SPRAVATO_WEB
