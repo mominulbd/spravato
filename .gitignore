@@ -27,12 +27,6 @@ Homestead.yaml
 Thumbs.db
 /test-results
 /playwright-report
-/site/node_modules
-/site/.next
-/site/.next-e2e
-/site/.env.local
-/site/next-env.d.ts
-/site/*.tsbuildinfo
 *.tsbuildinfo
 
 # Lighthouse HTML reports are large; summaries are committed (docs/reports/README.md).

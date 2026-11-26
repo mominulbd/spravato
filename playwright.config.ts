@@ -8,6 +8,8 @@ import { defineConfig } from '@playwright/test';
 // E2E_PORT / E2E_SITE_PORT move the run off ports another project's e2e run is using.
 const port = Number(process.env.E2E_PORT ?? 8124);
 const sitePort = Number(process.env.E2E_SITE_PORT ?? 3124);
+// The public site is its own repository (spravato-app), checked out beside this one.
+const siteDir = process.env.SITE_DIR ?? '../spravato-app';
 process.env.E2E_SITE_URL = `http://127.0.0.1:${sitePort}`;
 const secret = 'e2e-revalidate-secret';
 // The e2e database is rebuilt on every run, so a fixed test-only key is safe
@@ -39,9 +41,9 @@ export default defineConfig({
             timeout: 120_000,
         },
         {
-            // The public site (site/), built for production so caching and
+            // The public site (spravato-app), built for production so caching and
             // on-demand revalidation behave as they will live. Waits for the API.
-            command: `until curl -sf http://127.0.0.1:${port}/up > /dev/null; do sleep 1; done; cd site && ${siteEnv} npx next build && ${siteEnv} npx next start -p ${sitePort}`,
+            command: `until curl -sf http://127.0.0.1:${port}/up > /dev/null; do sleep 1; done; cd ${siteDir} && ${siteEnv} npx next build && ${siteEnv} npx next start -p ${sitePort}`,
             url: `http://127.0.0.1:${sitePort}/`,
             reuseExistingServer: false,
             timeout: 300_000,

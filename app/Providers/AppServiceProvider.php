@@ -32,9 +32,14 @@ class AppServiceProvider extends ServiceProvider
         // public origin instead of Laravel's own address.
         TrustProxies::at(config('app.trusted_proxies'));
 
-        // `composer dev` also runs the Next.js site (site/), which fronts
-        // Laravel on one origin: open http://localhost:3000.
-        DevCommands::register('npm --prefix site run dev', 'site');
+        // `composer dev` also runs the Next.js site when its repository
+        // (spravato-app) is checked out beside this one; it fronts Laravel on
+        // one origin: open http://localhost:3000.
+        $site = config('services.frontend.dev_path');
+
+        if (is_string($site) && is_dir($site)) {
+            DevCommands::register('npm --prefix '.escapeshellarg($site).' run dev', 'site');
+        }
     }
 
     /** Named limiters (docs/API.md §3). */

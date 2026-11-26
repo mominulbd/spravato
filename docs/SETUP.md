@@ -1,6 +1,6 @@
 # Spravato — Setup
 
-One repository, one domain: Laravel (API + React admin at `/admin`) at the root and the Next.js public site in `site/`. Staff sign in at `/admin/login`. See [DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md) §1.
+Two repositories side by side: this one (Laravel API + React admin at `/admin`) and the Next.js public site in `../spravato-app`. Staff sign in at `/admin/login`. See [DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md) §1.
 
 ## 1. Requirements
 
@@ -11,13 +11,14 @@ PHP 8.4, Composer 2.8+, Node 24+ (26 works), npm 11, MySQL 8.4+ or 9.x, Google C
 ```sh
 mysql -uroot -e "CREATE DATABASE spravato; CREATE DATABASE spravato_test; CREATE DATABASE spravato_e2e;"
 cp .env.example .env && php artisan key:generate
-cp site/.env.example site/.env.local     # REVALIDATE_SECRET / SITE_TOKEN = FRONTEND_* in .env (openssl rand -hex 32)
-composer install && npm install && npm --prefix site install
+git clone https://github.com/mominulbd/spravato-app.git ../spravato-app   # the public site
+cp ../spravato-app/.env.example ../spravato-app/.env.local   # REVALIDATE_SECRET / SITE_TOKEN = FRONTEND_* in .env (openssl rand -hex 32)
+composer install && npm install && npm --prefix ../spravato-app install
 php artisan migrate --seed               # roles, permissions, site content; locally one account per role
 composer dev                             # Laravel :8000, Vite, queue, logs and the site :3000
 ```
 
-Open **http://localhost:3000** for the site and **http://localhost:3000/admin/login** for the admin. In development `site/next.config.mjs` forwards `/admin`, `/api/v1`, `/sanctum`, `/build`, `/storage`, `/up` and `/login` to Laravel on :8000, so both run on one origin with one session cookie, as in production.
+Open **http://localhost:3000** for the site and **http://localhost:3000/admin/login** for the admin. In development the site's `next.config.mjs` forwards `/admin`, `/api/v1`, `/sanctum`, `/build`, `/storage`, `/up` and `/login` to Laravel on :8000, so both run on one origin with one session cookie, as in production.
 
 | Demo account (local and e2e only) | Role |
 | --- | --- |
@@ -35,8 +36,8 @@ Checks:
 ```sh
 composer lint && php artisan test --compact
 npm run lint && npm run types && npm test
-npm --prefix site run lint && npm --prefix site run types && npm --prefix site test
-npm run test:e2e                         # builds site/ and runs Playwright against spravato_e2e
+npm --prefix ../spravato-app run lint && npm --prefix ../spravato-app run types && npm --prefix ../spravato-app test
+npm run test:e2e                         # builds ../spravato-app (SITE_DIR) and runs Playwright against spravato_e2e
 ```
 
 ## 3. Laravel environment (`.env`)
@@ -60,7 +61,7 @@ Every variable is documented inline in `.env.example`. The ones that matter beyo
 | `GOOGLE_SEARCH_CONSOLE_CREDENTIALS`, `INDEXNOW_KEY` | SEO integrations (Phase 4). Search Console also feeds the SEO overview's clicks, top searches and indexed count |
 | `CRUX_API_KEY` | Chrome UX Report API key (Google Cloud, free) for the SEO overview's Core Web Vitals; empty hides them |
 
-## 4. Site environment (`site/.env.local`)
+## 4. Site environment (`../spravato-app/.env.local`)
 
 | Variable | Purpose |
 | --- | --- |

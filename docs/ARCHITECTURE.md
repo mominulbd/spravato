@@ -14,7 +14,7 @@ One repository, one domain:
 | Folder | What | Stack |
 | --- | --- | --- |
 | root | REST API, admin SPA at `/admin`, database, jobs | Laravel 13 · PHP 8.4 · MySQL · Sanctum · React 19 + Vite + Tailwind 4 |
-| `site/` | Public Spravato landing page | Next.js 16 App Router · Cache Components · Tailwind 4 |
+| `../spravato-app` (own repository) | Public Spravato landing page | Next.js 16 App Router · Cache Components · Tailwind 4 |
 
 Laravel answers `/admin`, `/api/v1`, `/sanctum`, `/build`, `/storage`, `/up` and `/login` (a 301 to `/admin/login`); Next.js answers everything else. In development `site/next.config.mjs` rewrites those paths to Laravel; in production nginx or Apache splits them (`deploy/`). The admin follows the module and SPA conventions of `~/Sites/decent-pos`, talks to Laravel only through `/api/v1`, and Blade renders an empty shell with no domain data. `../uptms-app` is a separate project and is not used here.
 
@@ -28,7 +28,7 @@ Laravel answers `/admin`, `/api/v1`, `/sanctum`, `/build`, `/storage`, `/up` and
  /admin /api/v1 /sanctum /build /storage /up       everything else
         │                                              │
 ┌───────▼───────────────────────────────┐   ┌──────────▼───────────────────┐
-│ Laravel 13                            │◄──┤ Next.js 16 (site/)           │
+│ Laravel 13                            │◄──┤ Next.js 16 (spravato-app)    │
 │  /admin            React admin SPA    │   │ Server Components fetch      │
 │  /api/v1/admin/*   staff, Sanctum     │   │ /api/v1/public/* server-side │
 │  /api/v1/public/*  anonymous, read    │   │ 'use cache' + cacheTag;      │
@@ -99,7 +99,7 @@ packages/<module>/
 - **Consultation scope.** `{consultation}` is bound through `ConsultationRequest::visibleTo()`: without `consultations.view_all` a person only resolves requests assigned to them, so anything else is `NOT_FOUND` before a controller runs. Assigning to others also needs `view_all`; export and delete need `consultations.export`. Whoever first marks an unassigned request contacted or scheduled becomes its owner.
 - **Audit.** Every opening of a request's details (`consultation.viewed`), and every status, assignment, follow-up, note, export and deletion. Sign-ins (successful, failed — attributed to the account when the email exists — and blocked), sign-outs, 2FA and password changes, invitations, user and role changes (model diffs via `Auditable`, role/permission changes as `permission.changed`) and audit exports.
 
-## 6. Public site (`site/`)
+## 6. Public site (`spravato-app` repository)
 
 *Phase 0: a shell. Phases 1–3 of DEVELOPMENT-PLAN.md fill it.*
 
@@ -113,7 +113,7 @@ packages/<module>/
 
 ## 7. Shared design tokens
 
-`resources/css/tokens.css` is the one Tailwind 4 `@theme` block generated from the Figma variables; the admin imports it and `site/app/globals.css` imports it too. Both apps get the same utilities: `bg-navy`, `text-royal`, `font-serif`, `text-admin-body`, `rounded-panel`, and so on.
+`resources/css/tokens.css` is the one Tailwind 4 `@theme` block generated from the Figma variables; the admin imports it and the site (spravato-app) keeps a copy in `app/tokens.css`; change both together. Both apps get the same utilities: `bg-navy`, `text-royal`, `font-serif`, `text-admin-body`, `rounded-panel`, and so on.
 
 ## 8. Errors
 

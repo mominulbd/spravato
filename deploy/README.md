@@ -1,5 +1,7 @@
 # Deploying Spravato
 
+> The public site moved to its own repository, [spravato-app](https://github.com/mominulbd/spravato-app). The Hostinger section at the end is current. The VPS layout below (`deploy.sh`, systemd/pm2 site units) still builds the site from `site/` inside this checkout and needs updating to clone spravato-app before it is used.
+
 One domain, two processes (docs/DEVELOPMENT-PLAN.md §1, D2):
 
 | Paths | Served by |
@@ -284,7 +286,7 @@ hPanel hosting runs PHP but cannot send part of one domain to a node process, no
 | Origin | Runs | Deployed by |
 | --- | --- | --- |
 | `https://admin.<domain>` (any subdomain) | Laravel: `/admin`, `/api/v1`, `/storage`, `/up` | `.github/workflows/ci.yml`, job `deploy`, on every green push to `main` |
-| `https://<domain>` | the Next.js site (`site/`) | a Node host of its own: hPanel → Websites → Node.js app (Business/Cloud plans), Vercel, or any VPS with `deploy/systemd/spravato-site@.service` |
+| `https://<domain>` | the Next.js site ([spravato-app](https://github.com/mominulbd/spravato-app), its own repository) | a Node host of its own: hPanel → Websites → Node.js app (Business/Cloud plans), Vercel, or any VPS with `deploy/systemd/spravato-site@.service` |
 
 The site only talks to Laravel server-side (`API_URL`), and staff use the admin on Laravel's origin, so nothing in the code changes; only the environment does. On a Hostinger **VPS** use the one-domain layout above instead.
 
@@ -329,12 +331,12 @@ Without `HOSTINGER_PUBLIC_PATH` the project root is assumed to be the document r
 5. hPanel → Cron Jobs, both every minute, with the PHP binary the deploy log printed:
    - `cd <deploy path> && /opt/alt/php84/usr/bin/php artisan schedule:run`
    - `cd <deploy path> && /opt/alt/php84/usr/bin/php artisan queue:work --stop-when-empty --max-time=55`
-6. The site. On Hostinger: hPanel → Websites → Add website → **Node.js app** on `<domain>`, connected to this GitHub repository, branch `main`:
+6. The site. On Hostinger: hPanel → Websites → Add website → **Node.js app** on `<domain>`, connected to the spravato-app repository, branch `main` (its README has the same steps):
 
    | Setting | Value |
    | --- | --- |
    | Framework | Next.js |
-   | Root directory | `site` (the whole repository is cloned: `site/app/globals.css` imports `../resources/css/tokens.css`) |
+   | Repository | `mominulbd/spravato-app` (the site's own repository; root directory: the repository root) |
    | Node version | 24 (22 at the least) |
    | Install / build | `npm ci` / `npm run build` |
    | Start | `npm start` (listens on the `PORT` Hostinger assigns) |

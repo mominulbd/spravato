@@ -1,7 +1,8 @@
 /*
  * UPTMS design tokens — copied from the Figma variables and text styles
- * (file ij7CwMEI0miNBTQn0lF0AE: "UPTMS Brand", "UPTMS Admin"). The only copy:
- * the admin and the Next.js site (site/app/globals.css) both import it.
+ * (file ij7CwMEI0miNBTQn0lF0AE: "UPTMS Brand", "UPTMS Admin"). The admin imports
+ * this file; the public site (spravato-app) keeps a copy in app/tokens.css.
+ * Change both together.
  *
  * Tailwind 4 turns every --color-*, --font-*, --text-* and --radius-* below
  * into utilities: bg-navy, text-royal, font-serif, text-admin-body, rounded-panel…

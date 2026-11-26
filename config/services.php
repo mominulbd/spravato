@@ -35,12 +35,14 @@ return [
         ],
     ],
 
-    // The public Next.js site (site/): canonical base URL, the shared
-    // secret for the on-publish revalidation webhook (docs/ARCHITECTURE.md §6)
-    // and the token that lets the site forward a visitor's IP with a form
-    // post (App\Support\Http\SiteClient).
+    // The public Next.js site (the spravato-app repository): canonical base
+    // URL, the shared secret for the on-publish revalidation webhook
+    // (docs/ARCHITECTURE.md §6), the token that lets the site forward a
+    // visitor's IP with a form post (App\Support\Http\SiteClient), and where
+    // its checkout lives for `composer dev`.
     'frontend' => [
         'url' => env('FRONTEND_URL', 'http://localhost:3000'),
+        'dev_path' => env('SITE_DIR', base_path('../spravato-app')),
         'revalidate_secret' => env('FRONTEND_REVALIDATE_SECRET'),
         'site_token' => env('FRONTEND_SITE_TOKEN'),
     ],
