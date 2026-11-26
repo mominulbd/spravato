@@ -86,9 +86,8 @@ jobs:
       - run: npm --prefix site run lint
       - run: npm --prefix site run types
       - run: npm --prefix site test
-      - run: npm --prefix site run build
-        env:
-          API_URL: http://127.0.0.1:8000/api/v1
+      # No `next build` here: prerendering / reads the page from the Laravel
+      # API. The e2e job builds the site for production against a live API.
 
   # Playwright against real servers (playwright.config.ts starts Laravel on
   # spravato_e2e and a production build of the site), including the axe
