@@ -46,7 +46,7 @@ test('Staff cannot reach users or the audit log', async ({ page }) => {
     await expect(nav.getByRole('link', { name: 'Users & roles' })).toHaveCount(0);
     await expect(nav.getByRole('link', { name: 'Audit log' })).toHaveCount(0);
 
-    await page.goto('/admin/audit-log');
+    await page.goto('/audit-log');
     await expect(page.getByRole('heading', { name: 'You don’t have access to the audit log' })).toBeVisible();
 
     const status = await page.evaluate(async () => (await fetch('/api/v1/admin/users', { headers: { Accept: 'application/json' } })).status);
@@ -60,6 +60,6 @@ test('a returning user signs in with a code, and signing out ends the session', 
     await page.getByRole('complementary').getByRole('button', { name: 'Sign out' }).click();
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
 
-    await page.goto('/admin/users');
-    await expect(page).toHaveURL(/\/admin\/login\?next=%2Fusers/);
+    await page.goto('/users');
+    await expect(page).toHaveURL(/\/login\?next=%2Fusers/);
 });

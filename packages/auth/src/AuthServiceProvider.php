@@ -44,6 +44,6 @@ final class AuthServiceProvider extends ModuleServiceProvider
 
         // Reset links open the admin SPA, not a Blade page.
         ResetPassword::createUrlUsing(fn (object $user, string $token): string => rtrim((string) config('app.url'), '/')
-            .'/admin/reset-password/'.$token.'?email='.rawurlencode((string) data_get($user, 'email')));
+            .'/reset-password/'.$token.'?email='.rawurlencode((string) data_get($user, 'email')));
     }
 }

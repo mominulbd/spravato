@@ -44,7 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group('public', ['throttle:public']);
         $middleware->group('admin', ['auth:sanctum', 'active', 'throttle:admin']);
 
-        $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/admin/login');
+        $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

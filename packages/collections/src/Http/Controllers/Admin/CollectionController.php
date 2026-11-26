@@ -22,7 +22,7 @@ use Uptms\Publishing\Services\Reorderer;
 
 /**
  * Figma 14–15: one endpoint set for every collection tab
- * (`/admin/collections/{type}`). Lists are short and ordered by hand, so
+ * (`/collections/{type}`). Lists are short and ordered by hand, so
  * they are returned whole rather than paginated.
  */
 class CollectionController

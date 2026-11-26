@@ -17,7 +17,7 @@ interface Invitation {
 }
 
 /**
- * The invitation link (/admin/invitation/{token}): choose a password, then
+ * The invitation link (/invitation/{token}): choose a password, then
  * RequireAuth sends the person on to 2FA set-up when their role needs it.
  */
 export function AcceptInvitationPage() {

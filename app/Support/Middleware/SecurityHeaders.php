@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Response headers for everything Laravel answers (docs/ARCHITECTURE.md §9):
- * /admin, /api, /sanctum and /up. The public site's pages get theirs from
+ * the admin, /api, /sanctum and /up. The public site's pages get theirs from
  * site/proxy.ts. The reverse proxy must not add a second copy of any of
  * these (two CSP headers intersect; two HSTS values conflict).
  *

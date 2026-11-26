@@ -18,7 +18,7 @@ async function freshCode(page: Page, email: string, secret: string): Promise<str
 }
 
 export async function signIn(page: Page, email: string) {
-    await page.goto('/admin/login');
+    await page.goto('/login');
     await page.getByLabel('Email address').fill(email);
     await page.getByLabel('Password').fill(DEMO_PASSWORD);
     await page.getByRole('button', { name: 'Sign in' }).click();

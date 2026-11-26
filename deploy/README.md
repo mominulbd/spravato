@@ -1,6 +1,6 @@
 # Deploying Spravato
 
-> The public site moved to its own repository, [spravato-app](https://github.com/mominulbd/spravato-app). The Hostinger section at the end is current. The VPS layout below (`deploy.sh`, systemd/pm2 site units) still builds the site from `site/` inside this checkout and needs updating to clone spravato-app before it is used.
+> The public site moved to its own repository, [spravato-app](https://github.com/mominulbd/spravato-app). The Hostinger section at the end is current. The admin now lives at the root of Laravel's origin (`/login`, not `/admin/login`), so the one-domain layout below no longer fits as written: it would need the admin on its own host. The VPS layout below (`deploy.sh`, systemd/pm2 site units) still builds the site from `site/` inside this checkout and needs updating to clone spravato-app before it is used.
 
 One domain, two processes (docs/DEVELOPMENT-PLAN.md §1, D2):
 
@@ -285,14 +285,14 @@ hPanel hosting runs PHP but cannot send part of one domain to a node process, no
 
 | Origin | Runs | Deployed by |
 | --- | --- | --- |
-| `https://admin.<domain>` (any subdomain) | Laravel: `/admin`, `/api/v1`, `/storage`, `/up` | `.github/workflows/ci.yml`, job `deploy`, on every green push to `main` |
+| `https://admin.<domain>` (any subdomain) | Laravel: the admin SPA at the root (`/login`), `/api/v1`, `/storage`, `/up` | `.github/workflows/ci.yml`, job `deploy`, on every green push to `main` |
 | `https://<domain>` | the Next.js site ([spravato-app](https://github.com/mominulbd/spravato-app), its own repository) | a Node host of its own: hPanel → Websites → Node.js app (Business/Cloud plans), Vercel, or any VPS with `deploy/systemd/spravato-site@.service` |
 
 The site only talks to Laravel server-side (`API_URL`), and staff use the admin on Laravel's origin, so nothing in the code changes; only the environment does. On a Hostinger **VPS** use the one-domain layout above instead.
 
 ### What the deploy job does
 
-Same as uptms-ad: builds `vendor/` (`--no-dev`) and `public/build` on the runner, rsyncs the tree with `--delete` (never `.env`, `storage/`, `public/storage`, the host's `.htaccess`, `.well-known/`, nor `site/`, `docs/`, tests), then on the host: `migrate --force`, the `PermissionSeeder`, the full `db:seed` only while `pages` is empty, `storage:link`, the config/route/view/event caches, `queue:restart`. With `HOSTINGER_PUBLIC_PATH` set it publishes only `public/` into the document root and rewrites that copy of `index.php` to the absolute app path. Last, a smoke test: `/up` and `/admin/login` answer 200, `/api/v1/public/settings` answers `"success":true`. A run on `main` is never cancelled mid-way.
+Same as uptms-ad: builds `vendor/` (`--no-dev`) and `public/build` on the runner, rsyncs the tree with `--delete` (never `.env`, `storage/`, `public/storage`, the host's `.htaccess`, `.well-known/`, nor `site/`, `docs/`, tests), then on the host: `migrate --force`, the `PermissionSeeder`, the full `db:seed` only while `pages` is empty, `storage:link`, the config/route/view/event caches, `queue:restart`. With `HOSTINGER_PUBLIC_PATH` set it publishes only `public/` into the document root and rewrites that copy of `index.php` to the absolute app path. Last, a smoke test: `/up` and `/login` answer 200, `/api/v1/public/settings` answers `"success":true`. A run on `main` is never cancelled mid-way.
 
 Preferred layout, framework outside the web root:
 

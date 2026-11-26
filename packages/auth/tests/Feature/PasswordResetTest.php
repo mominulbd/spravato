@@ -16,7 +16,7 @@ it('emails a reset link that opens the admin SPA', function () {
     Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
         $url = $notification->toMail($user)->actionUrl;
 
-        return str_contains($url, '/admin/reset-password/') && str_contains($url, 'email=joy%40uptms.test');
+        return str_contains($url, '/reset-password/') && str_contains($url, 'email=joy%40uptms.test');
     });
 });
 

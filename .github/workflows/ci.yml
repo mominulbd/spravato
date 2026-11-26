@@ -733,7 +733,7 @@ jobs:
           fi
           base=${APP_URL%/}
           failed=0
-          for path in /up /admin/login; do
+          for path in /up /login; do
             status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$base$path")
             echo "GET $path -> $status"
             [ "$status" = "200" ] || failed=1

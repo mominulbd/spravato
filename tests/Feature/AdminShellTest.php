@@ -2,29 +2,33 @@
 
 declare(strict_types=1);
 
-it('serves the admin SPA shell for any admin path', function (string $path): void {
+it('serves the admin SPA shell at the root and every admin path', function (string $path): void {
     $this->withoutVite();
 
     $this->get($path)
         ->assertOk()
         ->assertSee('<div id="app"></div>', false);
-})->with(['/admin', '/admin/login', '/admin/pages/home/seo']);
+})->with(['/', '/login', '/consultations', '/pages/home/seo', '/upcoming', '/apiary']);
 
-it('sends guests at the root to the admin sign-in page', function (): void {
-    $this->get('/')->assertRedirect('/admin/login')->assertStatus(302);
-});
-
-it('sends signed-in staff at the root to the admin dashboard', function (): void {
-    $this->actingAs(staffUser())->get('/')->assertRedirect('/admin')->assertStatus(302);
-});
-
-it('sends /login to the admin sign-in page', function (): void {
-    $this->get('/login')->assertRedirect('/admin/login')->assertStatus(301);
-});
-
-it('serves the admin shell to guests and lets its router send them to /admin/login', function (): void {
+it('leaves the API, Sanctum and the health check to Laravel', function (): void {
     $this->withoutVite();
 
-    $this->get('/admin/consultations')->assertOk();
+    $this->getJson('/api/v1/nope')->assertNotFound()->assertDontSee('<div id="app"></div>', false);
+    $this->get('/up')->assertOk()->assertDontSee('<div id="app"></div>', false);
+});
+
+it('sends old /admin links to the same path at the root', function (string $from, string $to): void {
+    $this->get($from)->assertRedirect($to)->assertStatus(301);
+})->with([
+    ['/admin', '/'],
+    ['/admin/login', '/login'],
+    ['/admin/consultations/42', '/consultations/42'],
+    ['/admin/reset-password/abc?email=joy%40uptms.test', '/reset-password/abc?email=joy%40uptms.test'],
+]);
+
+it('serves the admin shell to guests and lets its router send them to /login', function (): void {
+    $this->withoutVite();
+
+    $this->get('/consultations')->assertOk();
     $this->getJson('/api/v1/auth/me')->assertUnauthorized();
 });

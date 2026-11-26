@@ -99,14 +99,14 @@ for (const width of WIDTHS) {
 }
 
 test('the admin sign-in has no axe violations', async ({ page }) => {
-    await page.goto('/admin/login');
+    await page.goto('/login');
     await expect(page.getByLabel('Email address')).toBeVisible();
     await audit(page);
 });
 
 test('the admin sign-in fits a phone', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/admin/login');
+    await page.goto('/login');
     await expect(page.getByLabel('Email address')).toBeVisible();
     const { scrollWidth, innerWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
     expect(scrollWidth).toBeLessThanOrEqual(innerWidth);

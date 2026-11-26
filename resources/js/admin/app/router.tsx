@@ -96,7 +96,7 @@ const planned: RouteObject[] = NAVIGATION.flatMap((group) =>
 );
 
 /**
- * Admin routes under /admin (routes/web.php serves the shell). Every
+ * Admin routes at the root of Laravel's origin (routes/web.php serves the shell). Every
  * screen's API is guarded by Laravel; the guards here only decide what to
  * show (docs/ARCHITECTURE.md §5).
  */
@@ -164,4 +164,4 @@ export const routes: RouteObject[] = [
     },
 ];
 
-export const router = createBrowserRouter(routes, { basename: '/admin' });
+export const router = createBrowserRouter(routes);

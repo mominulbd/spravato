@@ -37,7 +37,7 @@ it('sends the same policy on errors', function (): void {
 it('gives the admin shell a nonce that the Vite tags carry', function (): void {
     $this->withoutVite();
 
-    $response = $this->get('/admin/login')->assertOk();
+    $response = $this->get('/login')->assertOk();
     $csp = cspDirectives((string) $response->headers->get('Content-Security-Policy'));
     $nonce = app(Vite::class)->cspNonce();
 
@@ -60,7 +60,7 @@ it('stamps the nonce on the built asset tags', function (): void {
     app(Vite::class)->useBuildDirectory('build-csp-test')->useHotFile(storage_path('framework/no-hot-file'));
 
     try {
-        $response = $this->get('/admin')->assertOk();
+        $response = $this->get('/')->assertOk();
         $nonce = app(Vite::class)->cspNonce();
 
         expect($response->getContent())->toContain('nonce="'.$nonce.'"')
@@ -73,8 +73,8 @@ it('stamps the nonce on the built asset tags', function (): void {
 it('changes the nonce on every request', function (): void {
     $this->withoutVite();
 
-    $first = $this->get('/admin')->headers->get('Content-Security-Policy');
-    $second = $this->get('/admin')->headers->get('Content-Security-Policy');
+    $first = $this->get('/')->headers->get('Content-Security-Policy');
+    $second = $this->get('/')->headers->get('Content-Security-Policy');
 
     expect($first)->not->toBe($second);
 });
@@ -85,7 +85,7 @@ it('allows the Vite dev server only while it runs', function (): void {
     app(Vite::class)->useHotFile($hot);
 
     try {
-        $csp = cspDirectives((string) $this->get('/admin')->headers->get('Content-Security-Policy'));
+        $csp = cspDirectives((string) $this->get('/')->headers->get('Content-Security-Policy'));
 
         expect($csp['script-src'])->toContain('http://[::1]:5173')
             ->and($csp['connect-src'])->toContain('ws://[::1]:5173');
@@ -97,7 +97,7 @@ it('allows the Vite dev server only while it runs', function (): void {
     File::put($hot, 'http://localhost:5173');
 
     try {
-        $csp = cspDirectives((string) $this->get('/admin')->headers->get('Content-Security-Policy'));
+        $csp = cspDirectives((string) $this->get('/')->headers->get('Content-Security-Policy'));
 
         expect($csp['script-src'])->not->toContain('5173');
     } finally {

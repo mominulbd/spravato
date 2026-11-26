@@ -40,6 +40,6 @@ final class InvitationNotification extends Notification implements ShouldQueue
 
     public static function url(string $token): string
     {
-        return rtrim((string) config('app.url'), '/').'/admin/invitation/'.$token;
+        return rtrim((string) config('app.url'), '/').'/invitation/'.$token;
     }
 }

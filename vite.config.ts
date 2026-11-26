@@ -5,7 +5,7 @@ import laravel from 'laravel-vite-plugin';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-// The admin SPA, served by Laravel at /admin (docs/ARCHITECTURE.md §2).
+// The admin SPA, served by Laravel at the root of its origin (docs/ARCHITECTURE.md §2).
 // `@shared` holds code with no admin-specific knowledge: API client, UI kit.
 export default defineConfig({
     plugins: [

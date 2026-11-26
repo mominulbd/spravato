@@ -48,6 +48,6 @@ final class NewConsultationRequestNotification extends Notification
 
     public static function url(int $requestId): string
     {
-        return rtrim((string) config('app.url'), '/').'/admin/consultations/'.$requestId;
+        return rtrim((string) config('app.url'), '/').'/consultations/'.$requestId;
     }
 }
